@@ -21,7 +21,7 @@ class DxApplication : public mini::WindowApplication
   protected:
     int MainLoop() override;
 
-    const Clock& getClock() const
+    const Clock& GetClock() const
     {
         return m_clock;
     }

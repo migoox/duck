@@ -49,7 +49,8 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     // Textures
     auto texturesDir = Path::TexturesDir();
-    m_envTexture     = m_device->CreateShaderResourceView(texturesDir / "cubeMap.dds");
+    m_envTextureView = m_device->CreateShaderResourceView(texturesDir / "cubeMap.dds");
+    CreateWaterSurfaceTexture();
 
     //  Shaders
     auto shadersDir = Path::ShadersDir();
@@ -89,6 +90,29 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     m_device->context()->GSSetConstantBuffers(0, 3, gsb); // Geometry Shaders - 0: projMtx, 1: viewMtx, 2: lightPos[2]
     ID3D11Buffer* psb[] = {m_cbSurfaceColor.get(), m_cbLightPos.get(), m_cbViewMtx.get()};
     m_device->context()->PSSetConstantBuffers(0, 3, psb); // Pixel Shaders - 0: surfaceColor, 1: lightPos[2], 2: ViewMtx
+}
+
+void mini::gk2::DuckDemo::CreateWaterSurfaceTexture()
+{
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width                = WaterSurfaceSimulation::SAMPLES_DEFAULT_SIZE;
+    desc.Height               = WaterSurfaceSimulation::SAMPLES_DEFAULT_SIZE;
+    desc.MipLevels            = 1;
+    desc.ArraySize            = 1;
+    desc.Format               = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    desc.SampleDesc.Count     = 1;
+    desc.Usage                = D3D11_USAGE_DYNAMIC;
+    desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags       = D3D11_CPU_ACCESS_WRITE;
+
+    m_waterSurfaceTexture = m_device->CreateTexture(desc);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format                          = desc.Format;
+    srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels             = 1;
+
+    m_waterSurfaceTextureView = m_device->CreateShaderResourceView(m_waterSurfaceTexture);
 }
 
 void mini::gk2::DuckDemo::CreateRenderStates()
@@ -144,11 +168,14 @@ void DuckDemo::HandleControls(double dt)
 void DuckDemo::Update(const Clock& c)
 {
     double dt = c.getFrameTime();
+    m_waterSimulation.Update(dt);
     HandleCameraInput(dt);
     HandleControls(dt);
     if (m_isAnimated)
     {
     }
+
+    m_waterSimulation.MapToSurfaceTexture(*m_device, m_waterSurfaceTexture);
 }
 void DuckDemo::SetWorldMtx(DirectX::XMFLOAT4X4 mtx)
 {
@@ -231,11 +258,11 @@ void mini::gk2::DuckDemo::DrawWater()
 void DuckDemo::DrawScene()
 {
     SetShaders(m_envVS, m_envPS, m_envInputLayout);
-    SetTextures({m_envTexture.get()}, m_samplerWrap);
+    SetTextures({m_envTextureView.get()}, m_samplerWrap);
     DrawRoomWalls();
 
     SetShaders(m_waterVS, m_waterPS, m_waterInputLayout);
-    SetTextures({m_envTexture.get()}, m_samplerWrap);
+    SetTextures({m_envTextureView.get(), m_waterSurfaceTextureView.get()}, m_samplerWrap);
     DrawWater();
 }
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "dxApplication.h"
 #include "mesh.h"
-#include "particleSystem.h"
 #include "shaderPass.h"
+#include "waterSurfaceSimulation.h"
 
 namespace mini::gk2
 {
@@ -20,6 +20,7 @@ class DuckDemo : public DxApplication
     void Render() override;
 
   private:
+    void CreateWaterSurfaceTexture();
     void CreateRenderStates();
 
     void HandleControls(double dt);
@@ -93,7 +94,9 @@ class DuckDemo : public DxApplication
 #pragma endregion
 
 #pragma region MATRICES
-    dx_ptr<ID3D11ShaderResourceView> m_envTexture;
+    dx_ptr<ID3D11ShaderResourceView> m_envTextureView;
+    dx_ptr<ID3D11ShaderResourceView> m_waterSurfaceTextureView;
+    dx_ptr<ID3D11Texture2D> m_waterSurfaceTexture;
 
     dx_ptr<ID3D11VertexShader> m_phongVS;
     dx_ptr<ID3D11PixelShader> m_phongPS;
@@ -113,6 +116,8 @@ class DuckDemo : public DxApplication
 
     bool m_isAnimated = true;
 #pragma endregion
+
+    WaterSurfaceSimulation m_waterSimulation;
 };
 
 } // namespace mini::gk2

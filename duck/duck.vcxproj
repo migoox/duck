@@ -38,7 +38,6 @@
     <ClCompile Include="dinput\keyboard.cpp" />
     <ClCompile Include="dinput\mouse.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="particleSystem.cpp" />
     <ClCompile Include="duckDemo.cpp" />
     <ClCompile Include="d3dx\shadowVolume.cpp" />
     <ClCompile Include="d3dx\shaderPass.cpp" />
@@ -64,6 +63,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="waterSurfaceSimulation.cpp" />
     <ClCompile Include="win\window.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -92,7 +92,6 @@
     <ClInclude Include="dinput\diptr.h" />
     <ClInclude Include="dinput\keyboard.h" />
     <ClInclude Include="dinput\mouse.h" />
-    <ClInclude Include="particleSystem.h" />
     <ClInclude Include="duckDemo.h" />
     <ClInclude Include="d3dx\shadowVolume.h" />
     <ClInclude Include="d3dx\shaderPass.h" />
@@ -102,6 +101,7 @@
     <ClInclude Include="utils\path.h" />
     <ClInclude Include="utils\pch.h" />
     <ClInclude Include="utils\ptr_vector.h" />
+    <ClInclude Include="waterSurfaceSimulation.h" />
     <ClInclude Include="win\clock.h" />
     <ClInclude Include="win\window.h" />
     <ClInclude Include="win\windowApplication.h" />

@@ -6,9 +6,25 @@
 using namespace std;
 using namespace mini;
 using namespace gk2;
+void CreateConsole()
+{
+    AllocConsole();
+
+    // Redirect standard streams to the console
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    freopen_s(&fp, "CONOUT$", "w", stderr);
+    freopen_s(&fp, "CONIN$", "r", stdin);
+
+    std::ios::sync_with_stdio();
+
+    // Optional: set console title
+    SetConsoleTitleA("Debug Console");
+}
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPWSTR cmdLine, int cmdShow)
 {
+    CreateConsole();
     UNREFERENCED_PARAMETER(prevInstance);
     UNREFERENCED_PARAMETER(cmdLine);
     auto exitCode = EXIT_FAILURE;

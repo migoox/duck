@@ -1,5 +1,6 @@
 
 TextureCube envMap : register(t0);
+Texture2D surfaceNormalMap : register(t1);
 SamplerState samp : register(s0);
 
 cbuffer cbView : register(b2) //Vertex Shader constant buffer slot 1
@@ -52,6 +53,10 @@ float3 intersectRay(float3 origin, float3 dir)
 
 float4 main(PSInput i) : SV_TARGET
 {
+    float2 tex = i.inCubePos.xz;
+    float3 n = surfaceNormalMap.Sample(samp, tex);
+    return float4(n, 1.0);
+
     float3 norm = float3(0.0, 1.0, 0.0);
     float3 camPos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
 
