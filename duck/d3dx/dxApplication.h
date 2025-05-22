@@ -45,7 +45,7 @@ class DxApplication : public mini::WindowApplication
     // Resets pipeline back to rendering into program window
     void ResetRenderTarget();
 
-    DxDevice m_device;
+    std::shared_ptr<DxDevice> m_device;
 
     DiInstance m_inputDevice;
     Mouse m_mouse;

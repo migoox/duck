@@ -11,18 +11,18 @@ using namespace gk2;
 using namespace DirectX;
 using namespace std;
 
-const XMFLOAT4 DuckDemo::LIGHT_POS[2]     = {{1.0f, 1.0f, 1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f}};
+const XMFLOAT4 DuckDemo::LIGHT_POS[2]     = {{0.0f, 4.f, 0.0f, 1.0f}, {3.f, 4.f, 0.0f, 1.0f}};
 const XMFLOAT4 DuckDemo::ROOM_WALLS_COLOR = {0.8f, 0.8f, 0.4f, 1.f};
 
 DuckDemo::DuckDemo(HINSTANCE appInstance)
     : DxApplication(appInstance, 1280, 720, L"Kaczucha"),
       // Constant Buffers
-      m_cbWorldMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),   //
-      m_cbProjMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),    //
-      m_cbTexMtx(m_device.CreateConstantBuffer<XMFLOAT4X4>()),     //
-      m_cbViewMtx(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()), //
-      m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>()), //
-      m_cbLightPos(m_device.CreateConstantBuffer<XMFLOAT4, 2>()),  //
+      m_cbWorldMtx(m_device->CreateConstantBuffer<XMFLOAT4X4>()),   //
+      m_cbProjMtx(m_device->CreateConstantBuffer<XMFLOAT4X4>()),    //
+      m_cbTexMtx(m_device->CreateConstantBuffer<XMFLOAT4X4>()),     //
+      m_cbViewMtx(m_device->CreateConstantBuffer<XMFLOAT4X4, 2>()), //
+      m_cbSurfaceColor(m_device->CreateConstantBuffer<XMFLOAT4>()), //
+      m_cbLightPos(m_device->CreateConstantBuffer<XMFLOAT4, 2>()),  //
       m_orbitCamera(XMFLOAT3(0, 0, 0))
 {
 
@@ -37,7 +37,11 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     m_orbitCamera.Zoom(5.f);
 
     // Meshes
-    m_roomWalls = Mesh::ShadedBox(m_device, ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH, true);
+    m_roomWalls  = Mesh::ShadedBox(*m_device, ROOM_SIZE, ROOM_SIZE, ROOM_SIZE, true);
+    m_waterPlane = Mesh::DoubleRect(*m_device, ROOM_SIZE);
+
+    DirectX::XMStoreFloat4x4(&m_waterPlaneMtx,
+                             XMMatrixTranslation(0.f, 0.f, -WATER_LEVEL) * XMMatrixRotationX(XMConvertToRadians(90.f)));
 
     // Constant buffers content
     UpdateBuffer(m_cbLightPos, LIGHT_POS);
@@ -47,44 +51,45 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     // Textures
     auto texturesDir = Path::TexturesDir();
-    m_envTexture     = m_device.CreateShaderResourceView(texturesDir / "cubeMap.dds");
+    m_envTexture     = m_device->CreateShaderResourceView(texturesDir / "cubeMap.dds");
 
     //  Shaders
     auto shadersDir = Path::ShadersDir();
 
-    auto vsCode = m_device.LoadByteCode(shadersDir / L"phongVS.cso");
-    auto psCode = m_device.LoadByteCode(shadersDir / L"phongPS.cso");
-    m_phongVS   = m_device.CreateVertexShader(vsCode);
-    m_phongPS   = m_device.CreatePixelShader(psCode);
+    auto vsCode        = m_device->LoadByteCode(shadersDir / L"phongVS.cso");
+    auto psCode        = m_device->LoadByteCode(shadersDir / L"phongPS.cso");
+    m_phongVS          = m_device->CreateVertexShader(vsCode);
+    m_phongPS          = m_device->CreatePixelShader(psCode);
+    m_phongInputLayout = m_device->CreateInputLayout(VertexPositionNormal::Layout, vsCode);
 
-    vsCode       = m_device.LoadByteCode(shadersDir / L"texturedVS.cso");
-    psCode       = m_device.LoadByteCode(shadersDir / L"texturedPS.cso");
-    m_texturedVS = m_device.CreateVertexShader(vsCode);
-    m_texturedPS = m_device.CreatePixelShader(psCode);
+    vsCode       = m_device->LoadByteCode(shadersDir / L"texturedVS.cso");
+    psCode       = m_device->LoadByteCode(shadersDir / L"texturedPS.cso");
+    m_texturedVS = m_device->CreateVertexShader(vsCode);
+    m_texturedPS = m_device->CreatePixelShader(psCode);
 
-    vsCode  = m_device.LoadByteCode(shadersDir / L"envVS.cso");
-    psCode  = m_device.LoadByteCode(shadersDir / L"envPS.cso");
-    m_envVS = m_device.CreateVertexShader(vsCode);
-    m_envPS = m_device.CreatePixelShader(psCode);
+    vsCode           = m_device->LoadByteCode(shadersDir / L"envVS.cso");
+    psCode           = m_device->LoadByteCode(shadersDir / L"envPS.cso");
+    m_envVS          = m_device->CreateVertexShader(vsCode);
+    m_envPS          = m_device->CreatePixelShader(psCode);
+    m_envInputLayout = m_device->CreateInputLayout(VertexPosition::Layout, vsCode);
 
-    m_inputlayout = m_device.CreateInputLayout(VertexPositionNormal::Layout, vsCode);
-    m_device.context()->IASetInputLayout(m_inputlayout.get());
-    m_device.context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_device->context()->IASetInputLayout(m_phongInputLayout.get());
+    m_device->context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // We have to make sure all shaders use constant buffers in the same slots!
     ID3D11Buffer* vsb[] = {m_cbWorldMtx.get(), m_cbViewMtx.get(), m_cbProjMtx.get(), m_cbTexMtx.get()};
-    m_device.context()->VSSetConstantBuffers(
+    m_device->context()->VSSetConstantBuffers(
         0, 4,
         vsb); // Vertex Shaders - 0: worldMtx, 1: viewMtx,invViewMtx, 2: projMtx, 3: texMtx
     ID3D11Buffer* gsb[] = {m_cbProjMtx.get(), m_cbViewMtx.get(), m_cbLightPos.get()};
-    m_device.context()->GSSetConstantBuffers(0, 3, gsb); // Geometry Shaders - 0: projMtx, 1: viewMtx, 2: lightPos[2]
+    m_device->context()->GSSetConstantBuffers(0, 3, gsb); // Geometry Shaders - 0: projMtx, 1: viewMtx, 2: lightPos[2]
     ID3D11Buffer* psb[] = {m_cbSurfaceColor.get(), m_cbLightPos.get()};
-    m_device.context()->PSSetConstantBuffers(0, 2, psb); // Pixel Shaders - 0: surfaceColor, 1: lightPos[2]
+    m_device->context()->PSSetConstantBuffers(0, 2, psb); // Pixel Shaders - 0: surfaceColor, 1: lightPos[2]
 }
 
 void mini::gk2::DuckDemo::CreateRenderStates()
 {
-    m_bsAlpha = m_device.CreateBlendState(BlendDescription::AlphaBlendDescription());
+    m_bsAlpha = m_device->CreateBlendState(BlendDescription::AlphaBlendDescription());
 
     // Setup wrap sampler
     SamplerDescription sd;
@@ -94,7 +99,7 @@ void mini::gk2::DuckDemo::CreateRenderStates()
     sd.Filter        = D3D11_FILTER_ANISOTROPIC;
     sd.MaxAnisotropy = 16;
 
-    m_samplerWrap = m_device.CreateSamplerState(sd);
+    m_samplerWrap = m_device->CreateSamplerState(sd);
 }
 
 void DuckDemo::UpdateCameraCB(XMMATRIX viewMtx)
@@ -165,39 +170,49 @@ void DuckDemo::SetSurfaceColor(DirectX::XMFLOAT4 color)
     UpdateBuffer(m_cbSurfaceColor, color);
 }
 
-void DuckDemo::SetShaders(const dx_ptr<ID3D11VertexShader>& vs, const dx_ptr<ID3D11PixelShader>& ps)
+void mini::gk2::DuckDemo::SetShaders(const dx_ptr<ID3D11VertexShader>& vs, const dx_ptr<ID3D11PixelShader>& ps,
+                                     const dx_ptr<ID3D11InputLayout>& inputLayout)
 {
-    m_device.context()->VSSetShader(vs.get(), nullptr, 0);
-    m_device.context()->PSSetShader(ps.get(), nullptr, 0);
+    m_device->context()->IASetInputLayout(inputLayout.get());
+    m_device->context()->VSSetShader(vs.get(), nullptr, 0);
+    m_device->context()->PSSetShader(ps.get(), nullptr, 0);
 }
 
 void DuckDemo::SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList,
                            const dx_ptr<ID3D11SamplerState>& sampler)
 {
-    m_device.context()->PSSetShaderResources(0, resList.size(), resList.begin());
+    m_device->context()->PSSetShaderResources(0, resList.size(), resList.begin());
     auto s_ptr = sampler.get();
-    m_device.context()->PSSetSamplers(0, 1, &s_ptr);
+    m_device->context()->PSSetSamplers(0, 1, &s_ptr);
 }
 
 void DuckDemo::DrawMesh(const Mesh& m, DirectX::XMFLOAT4X4 worldMtx)
 {
     SetWorldMtx(worldMtx);
-    m.Render(m_device.context());
+    m.Render(m_device->context());
 }
 
 void DuckDemo::DrawRoomWalls()
 {
-    SetSurfaceColor(ROOM_WALLS_COLOR);
     XMFLOAT4X4 mat;
     DirectX::XMStoreFloat4x4(&mat, DirectX::XMMatrixIdentity());
     DrawMesh(m_roomWalls, mat);
 }
 
+void mini::gk2::DuckDemo::DrawWater()
+{
+    SetSurfaceColor(ROOM_WALLS_COLOR);
+    DrawMesh(m_waterPlane, m_waterPlaneMtx);
+}
+
 void DuckDemo::DrawScene()
 {
-    SetShaders(m_envVS, m_envPS);
+    SetShaders(m_envVS, m_envPS, m_envInputLayout);
     SetTextures({m_envTexture.get()}, m_samplerWrap);
     DrawRoomWalls();
+
+    SetShaders(m_phongVS, m_phongPS, m_phongInputLayout);
+    DrawWater();
 }
 
 void DuckDemo::Render()
@@ -205,8 +220,8 @@ void DuckDemo::Render()
     Base::Render();
 
     ResetRenderTarget();
-    m_device.context()->ClearDepthStencilView(m_depthBuffer.get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    m_device.context()->OMSetDepthStencilState(nullptr, 0);
+    m_device->context()->ClearDepthStencilView(m_depthBuffer.get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    m_device->context()->OMSetDepthStencilState(nullptr, 0);
     UpdateBuffer(m_cbProjMtx, m_projMtx);
     UpdateCameraCB();
     DrawScene();

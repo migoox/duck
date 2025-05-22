@@ -2,6 +2,7 @@
 #include "dxApplication.h"
 #include "mesh.h"
 #include "particleSystem.h"
+#include "shaderPass.h"
 
 namespace mini::gk2
 {
@@ -35,7 +36,8 @@ class DuckDemo : public DxApplication
 
     void SetWorldMtx(DirectX::XMFLOAT4X4 mtx);
     void SetSurfaceColor(DirectX::XMFLOAT4 color);
-    void SetShaders(const dx_ptr<ID3D11VertexShader>& vs, const dx_ptr<ID3D11PixelShader>& ps);
+    void SetShaders(const dx_ptr<ID3D11VertexShader>& vs, const dx_ptr<ID3D11PixelShader>& ps,
+                    const dx_ptr<ID3D11InputLayout>& inputLayout);
 
     void SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList,
                      const dx_ptr<ID3D11SamplerState>& sampler);
@@ -45,6 +47,7 @@ class DuckDemo : public DxApplication
     }
 
     void DrawRoomWalls();
+    void DrawWater();
     void DrawScene();
 
 #pragma region CONSTANTS
@@ -53,17 +56,15 @@ class DuckDemo : public DxApplication
     static const DirectX::XMFLOAT4 ROOM_WALLS_COLOR;
     static constexpr size_t PUMA_PARTS  = 6;
     static constexpr size_t ANGLE_COUNT = 5;
-    static constexpr float ROOM_WIDTH   = 10.f;
-    static constexpr float ROOM_HEIGHT  = 6.f;
-    static constexpr float ROOM_DEPTH   = 8.f;
+    static constexpr float ROOM_SIZE    = 10.f;
 
     static constexpr float ROTATION_SPEED = 7.f;
     static constexpr float ZOOM_SPEED     = 4.f;
+    static constexpr float WATER_LEVEL    = -2.f; // measured from level 0
 
 #pragma endregion
 
-#pragma region MEMBERS
-
+#pragma region BUFFERS
     dx_ptr<ID3D11Buffer> m_cbWorldMtx, // vertex shader constant buffer slot 0
         m_cbProjMtx,                   // vertex shader constant buffer slot 2 & geometry shader constant buffer slot 0
         m_cbTexMtx;                    // vertex shader constant buffer slot 3
@@ -71,16 +72,26 @@ class DuckDemo : public DxApplication
 
     dx_ptr<ID3D11Buffer> m_cbSurfaceColor; // pixel shader constant buffer slot 0
     dx_ptr<ID3D11Buffer> m_cbLightPos;     // pixel shader constant buffer slot 1
+#pragma endregion
 
+#pragma region MESHES
     Mesh m_roomWalls;
+    Mesh m_waterPlane;
+#pragma endregion
 
-    DirectX::XMFLOAT4X4 m_projMtx;
+#pragma region MATRICES
+    DirectX::XMFLOAT4X4 m_projMtx, m_waterPlaneMtx;
+#pragma endregion
 
+#pragma region STATES
     dx_ptr<ID3D11SamplerState> m_samplerWrap;
     dx_ptr<ID3D11BlendState> m_bsAlpha;
 
-    dx_ptr<ID3D11InputLayout> m_inputlayout;
+    dx_ptr<ID3D11InputLayout> m_phongInputLayout;
+    dx_ptr<ID3D11InputLayout> m_envInputLayout;
+#pragma endregion
 
+#pragma region MATRICES
     dx_ptr<ID3D11ShaderResourceView> m_envTexture;
 
     dx_ptr<ID3D11VertexShader> m_phongVS;
@@ -89,7 +100,9 @@ class DuckDemo : public DxApplication
     dx_ptr<ID3D11PixelShader> m_texturedPS;
     dx_ptr<ID3D11VertexShader> m_envVS;
     dx_ptr<ID3D11PixelShader> m_envPS;
+#pragma endregion
 
+#pragma region CAMERA
     KeyboardState m_prevKeyboardState;
     KeyboardState m_currKeyboardState;
 

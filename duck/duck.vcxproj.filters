@@ -28,6 +28,7 @@
     <ClCompile Include="d3dx\shadowVolume.cpp" />
     <ClCompile Include="particleSystem.cpp" />
     <ClCompile Include="duckDemo.cpp" />
+    <ClCompile Include="d3dx\shaderPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dx\camera.h" />
@@ -56,6 +57,7 @@
     <ClInclude Include="utils\hashCombine.h" />
     <ClInclude Include="particleSystem.h" />
     <ClInclude Include="duckDemo.h" />
+    <ClInclude Include="d3dx\shaderPass.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\phongPS.hlsl" />
