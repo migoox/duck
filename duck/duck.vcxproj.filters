@@ -67,6 +67,8 @@
     <FxCompile Include="shaders\solidColorPS.hlsl" />
     <FxCompile Include="shaders\envPS.hlsl" />
     <FxCompile Include="shaders\envVS.hlsl" />
+    <FxCompile Include="shaders\waterPS.hlsl" />
+    <FxCompile Include="shaders\waterVS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\metal.png">

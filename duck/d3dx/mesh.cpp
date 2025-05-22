@@ -195,15 +195,15 @@ std::vector<unsigned short> mini::Mesh::PentagonIdxs()
 
 std::vector<VertexPositionNormal> mini::Mesh::DoubleRectVerts(float width, float height)
 {
-    return {{{-0.5f * width, -0.5f * height, 0.0f}, {0.0f, 0.0f, 1.0f}},
-            {{+0.5f * width, -0.5f * height, 0.0f}, {0.0f, 0.0f, 1.0f}},
-            {{+0.5f * width, +0.5f * height, 0.0f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f * width, +0.5f * height, 0.0f}, {0.0f, 0.0f, 1.0f}},
+    return {{{-0.5f * width, 0.0f, -0.5f * height}, {0.0f, 0.0f, 1.0f}},
+            {{+0.5f * width, 0.0f, -0.5f * height}, {0.0f, 0.0f, 1.0f}},
+            {{+0.5f * width, 0.0f, +0.5f * height}, {0.0f, 0.0f, 1.0f}},
+            {{-0.5f * width, 0.0f, +0.5f * height}, {0.0f, 0.0f, 1.0f}},
 
-            {{-0.5f * width, -0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}},
-            {{-0.5f * width, +0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}},
-            {{+0.5f * width, +0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}},
-            {{+0.5f * width, -0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}}};
+            {{-0.5f * width, 0.0f, -0.5f * height}, {0.0f, 0.0f, -1.0f}},
+            {{-0.5f * width, 0.0f, +0.5f * height}, {0.0f, 0.0f, -1.0f}},
+            {{+0.5f * width, 0.0f, +0.5f * height}, {0.0f, 0.0f, -1.0f}},
+            {{+0.5f * width, 0.0f, -0.5f * height}, {0.0f, 0.0f, -1.0f}}};
 }
 
 std::vector<unsigned short> mini::Mesh::DoubleRectIdxs()
@@ -213,10 +213,12 @@ std::vector<unsigned short> mini::Mesh::DoubleRectIdxs()
 
 std::vector<VertexPositionNormal> mini::Mesh::RectangleVerts(float width, float height)
 {
-    return {{{-0.5f * width, -0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}},
-            {{-0.5f * width, +0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}},
-            {{+0.5f * width, +0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}},
-            {{+0.5f * width, -0.5f * height, 0.0f}, {0.0f, 0.0f, -1.0f}}};
+    return {
+        {{+0.5f * width, 0.0f, +0.5f * height}, {0.0f, 1.0f, 0.0f}},
+        {{+0.5f * width, 0.0f, -0.5f * height}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f * width, 0.0f, -0.5f * height}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f * width, 0.0f, +0.5f * height}, {0.0f, 1.0f, 0.0f}},
+    };
 }
 
 std::vector<unsigned short> mini::Mesh::RectangleIdx()

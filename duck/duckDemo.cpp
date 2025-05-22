@@ -38,10 +38,8 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     // Meshes
     m_roomWalls  = Mesh::ShadedBox(*m_device, ROOM_SIZE, ROOM_SIZE, ROOM_SIZE, true);
-    m_waterPlane = Mesh::DoubleRect(*m_device, ROOM_SIZE);
-
-    DirectX::XMStoreFloat4x4(&m_waterPlaneMtx,
-                             XMMatrixTranslation(0.f, 0.f, -WATER_LEVEL) * XMMatrixRotationX(XMConvertToRadians(90.f)));
+    m_waterPlane = Mesh::Rectangle(*m_device, 2.f);
+    DirectX::XMStoreFloat4x4(&m_waterPlaneMtx, XMMatrixScaling(ROOM_SIZE / 2.f, ROOM_SIZE / 2.f, ROOM_SIZE / 2.f));
 
     // Constant buffers content
     UpdateBuffer(m_cbLightPos, LIGHT_POS);
@@ -73,6 +71,12 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     m_envPS          = m_device->CreatePixelShader(psCode);
     m_envInputLayout = m_device->CreateInputLayout(VertexPosition::Layout, vsCode);
 
+    vsCode             = m_device->LoadByteCode(shadersDir / L"waterVS.cso");
+    psCode             = m_device->LoadByteCode(shadersDir / L"waterPS.cso");
+    m_waterVS          = m_device->CreateVertexShader(vsCode);
+    m_waterPS          = m_device->CreatePixelShader(psCode);
+    m_waterInputLayout = m_device->CreateInputLayout(VertexPosition::Layout, vsCode);
+
     m_device->context()->IASetInputLayout(m_phongInputLayout.get());
     m_device->context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -83,8 +87,8 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
         vsb); // Vertex Shaders - 0: worldMtx, 1: viewMtx,invViewMtx, 2: projMtx, 3: texMtx
     ID3D11Buffer* gsb[] = {m_cbProjMtx.get(), m_cbViewMtx.get(), m_cbLightPos.get()};
     m_device->context()->GSSetConstantBuffers(0, 3, gsb); // Geometry Shaders - 0: projMtx, 1: viewMtx, 2: lightPos[2]
-    ID3D11Buffer* psb[] = {m_cbSurfaceColor.get(), m_cbLightPos.get()};
-    m_device->context()->PSSetConstantBuffers(0, 2, psb); // Pixel Shaders - 0: surfaceColor, 1: lightPos[2]
+    ID3D11Buffer* psb[] = {m_cbSurfaceColor.get(), m_cbLightPos.get(), m_cbViewMtx.get()};
+    m_device->context()->PSSetConstantBuffers(0, 3, psb); // Pixel Shaders - 0: surfaceColor, 1: lightPos[2], 2: ViewMtx
 }
 
 void mini::gk2::DuckDemo::CreateRenderStates()
@@ -93,13 +97,26 @@ void mini::gk2::DuckDemo::CreateRenderStates()
 
     // Setup wrap sampler
     SamplerDescription sd;
-    sd.AddressU      = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.AddressV      = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.AddressW      = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.Filter        = D3D11_FILTER_ANISOTROPIC;
-    sd.MaxAnisotropy = 16;
+    sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sd.AddressU       = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressV       = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressW       = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.MaxAnisotropy  = 16;
+    sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sd.BorderColor[0] = 1.f;
+    sd.BorderColor[1] = 1.f;
+    sd.BorderColor[2] = 1.f;
+    sd.BorderColor[3] = 1.f;
+    sd.MinLOD         = -D3D11_FLOAT32_MAX;
+    sd.MaxLOD         = D3D11_FLOAT32_MAX;
 
     m_samplerWrap = m_device->CreateSamplerState(sd);
+
+    // Setup rasterizer without culling
+    RasterizerDescription rsDesc;
+    rsDesc.FrontCounterClockwise = true;
+    rsDesc.CullMode              = D3D11_CULL_NONE;
+    m_rsCullNone                 = m_device->CreateRasterizerState(rsDesc);
 }
 
 void DuckDemo::UpdateCameraCB(XMMATRIX viewMtx)
@@ -157,7 +174,7 @@ bool DuckDemo::HandleCameraInput(double dt)
         }
         if (mstate.isButtonDown(1))
         {
-            m_orbitCamera.Zoom(d.x * ZOOM_SPEED * dt);
+            m_orbitCamera.Zoom(d.y * ZOOM_SPEED * dt);
             result = true;
         }
     }
@@ -201,8 +218,14 @@ void DuckDemo::DrawRoomWalls()
 
 void mini::gk2::DuckDemo::DrawWater()
 {
+    ID3D11RasterizerState* rsPrev;
+    m_device->context()->RSGetState(&rsPrev);
+    m_device->context()->RSSetState(m_rsCullNone.get());
+
     SetSurfaceColor(ROOM_WALLS_COLOR);
     DrawMesh(m_waterPlane, m_waterPlaneMtx);
+
+    m_device->context()->RSSetState(rsPrev);
 }
 
 void DuckDemo::DrawScene()
@@ -211,7 +234,8 @@ void DuckDemo::DrawScene()
     SetTextures({m_envTexture.get()}, m_samplerWrap);
     DrawRoomWalls();
 
-    SetShaders(m_phongVS, m_phongPS, m_phongInputLayout);
+    SetShaders(m_waterVS, m_waterPS, m_waterInputLayout);
+    SetTextures({m_envTexture.get()}, m_samplerWrap);
     DrawWater();
 }
 

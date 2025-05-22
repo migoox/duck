@@ -54,13 +54,11 @@ class DuckDemo : public DxApplication
     // can't have in-class initializer since XMFLOAT... types' constructors are not constexpr
     static const DirectX::XMFLOAT4 LIGHT_POS[2];
     static const DirectX::XMFLOAT4 ROOM_WALLS_COLOR;
-    static constexpr size_t PUMA_PARTS  = 6;
-    static constexpr size_t ANGLE_COUNT = 5;
-    static constexpr float ROOM_SIZE    = 10.f;
-
+    static constexpr size_t PUMA_PARTS    = 6;
+    static constexpr size_t ANGLE_COUNT   = 5;
+    static constexpr float ROOM_SIZE      = 10.f;
     static constexpr float ROTATION_SPEED = 7.f;
-    static constexpr float ZOOM_SPEED     = 4.f;
-    static constexpr float WATER_LEVEL    = -2.f; // measured from level 0
+    static constexpr float ZOOM_SPEED     = 5.f;
 
 #pragma endregion
 
@@ -89,6 +87,9 @@ class DuckDemo : public DxApplication
 
     dx_ptr<ID3D11InputLayout> m_phongInputLayout;
     dx_ptr<ID3D11InputLayout> m_envInputLayout;
+    dx_ptr<ID3D11InputLayout> m_waterInputLayout;
+
+    dx_ptr<ID3D11RasterizerState> m_rsCullNone;
 #pragma endregion
 
 #pragma region MATRICES
@@ -100,6 +101,8 @@ class DuckDemo : public DxApplication
     dx_ptr<ID3D11PixelShader> m_texturedPS;
     dx_ptr<ID3D11VertexShader> m_envVS;
     dx_ptr<ID3D11PixelShader> m_envPS;
+    dx_ptr<ID3D11VertexShader> m_waterVS;
+    dx_ptr<ID3D11PixelShader> m_waterPS;
 #pragma endregion
 
 #pragma region CAMERA
