@@ -12,6 +12,19 @@ mini::gk2::WaterSurfaceSimulation::WaterSurfaceSimulation()
     GetCurrentHeightBuffer().resize(m_samplesCount * m_samplesCount, 0.f);
     GetNextHeightBuffer().resize(m_samplesCount * m_samplesCount, 0.f);
     m_normalMap.resize(m_samplesCount * m_samplesCount * 4, 0);
+    m_distances.resize(m_samplesCount * m_samplesCount, 0.f);
+    for (auto i = 0; i < m_samplesCount; i++)
+    {
+        for (auto j = 0; j < m_samplesCount; j++)
+        {
+            // Chebyshev distance
+            auto dist                           = std::max<int>(std::abs(0 - i),
+                                                                std::max<int>(std::abs(0 - j), std::max<int>(std::abs(m_samplesCount - i),
+                                                                                                             std::abs(m_samplesCount - j))));
+            auto l                              = 2.f * static_cast<float>(dist) / static_cast<float>(m_samplesCount);
+            m_distances[i * m_samplesCount + j] = 0.95 * std::min<float>(1.f, l / 0.2f);
+        }
+    }
 }
 
 void mini::gk2::WaterSurfaceSimulation::Update(float dt)
@@ -82,21 +95,15 @@ void mini::gk2::WaterSurfaceSimulation::Step()
     auto b      = 2.f - 4.f * a;
     using Clock = std::chrono::high_resolution_clock;
     auto start  = Clock::now();
-    for (auto i = 0; i < m_samplesCount; i++)
+    for (auto i = 1; i < m_samplesCount - 1; i++)
     {
-        for (auto j = 0; j < m_samplesCount; j++)
+        for (auto j = 1; j < m_samplesCount - 1; j++)
         {
             // Chebyshev distance
-            auto dist = std::max<int>(std::abs(0 - i),
-                                      std::max<int>(std::abs(0 - j), std::max<int>(std::abs(m_samplesCount - i),
-                                                                                   std::abs(m_samplesCount - j))));
-            auto l    = 2.f * static_cast<float>(dist) / static_cast<float>(m_samplesCount);
-            auto d    = 0.95 * std::min<float>(1.f, l / 0.2f);
-
             auto bb = b * GetValue(curr, i, j) - GetValue(next, i, j);
             auto aa = a * (GetValue(curr, i + 1, j) + GetValue(curr, i - 1, j) + GetValue(curr, i, j - 1) +
                            GetValue(curr, i, j + 1));
-            SetValue(next, i, j, d * (aa + bb));
+            SetValue(next, i, j, GetValue(m_distances, i, j) * (aa + bb));
         }
     }
     auto end                                          = Clock::now();
