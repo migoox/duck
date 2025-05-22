@@ -23,9 +23,8 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
       m_cbViewMtx(m_device.CreateConstantBuffer<XMFLOAT4X4, 2>()), //
       m_cbSurfaceColor(m_device.CreateConstantBuffer<XMFLOAT4>()), //
       m_cbLightPos(m_device.CreateConstantBuffer<XMFLOAT4, 2>()),  //
-      m_fpsCamera(XMFLOAT3(0, 0, 0))
+      m_orbitCamera(XMFLOAT3(0, 0, 0))
 {
-    SetCameraMode(false);
 
     // Projection matrix
     auto s  = m_window.getClientSize();
@@ -35,9 +34,7 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     UpdateCameraCB();
 
     // Set the camera starting position
-    XMFLOAT3 temp;
-    XMStoreFloat3(&temp, XMVectorSet(1.f / 4.f * ROOM_WIDTH, 0.f, -1.f / 4.f * ROOM_DEPTH, 1.f));
-    m_currentCamera->SetTarget(temp);
+    m_orbitCamera.Zoom(5.f);
 
     // Meshes
     m_roomWalls = Mesh::ShadedBox(m_device, ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH, true);
@@ -50,6 +47,7 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     // Textures
     auto texturesDir = Path::TexturesDir();
+    m_envTexture     = m_device.CreateShaderResourceView(texturesDir / "cubeMap.dds");
 
     //  Shaders
     auto shadersDir = Path::ShadersDir();
@@ -64,25 +62,12 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     m_texturedVS = m_device.CreateVertexShader(vsCode);
     m_texturedPS = m_device.CreatePixelShader(psCode);
 
-    vsCode           = m_device.LoadByteCode(shadersDir / L"shadowVolumeVS.cso");
-    psCode           = m_device.LoadByteCode(shadersDir / L"solidColorPS.cso");
-    auto gsCode      = m_device.LoadByteCode(shadersDir / L"shadowVolumeGS.cso");
-    m_shadowVolumeVS = m_device.CreateVertexShader(vsCode);
-    m_solidColorPS   = m_device.CreatePixelShader(psCode);
-    m_shadowVolumeGS = m_device.CreateGeometryShader(gsCode);
-
-    psCode      = m_device.LoadByteCode(shadersDir / L"ambientPS.cso");
-    m_ambientPS = m_device.CreatePixelShader(psCode);
+    vsCode  = m_device.LoadByteCode(shadersDir / L"envVS.cso");
+    psCode  = m_device.LoadByteCode(shadersDir / L"envPS.cso");
+    m_envVS = m_device.CreateVertexShader(vsCode);
+    m_envPS = m_device.CreatePixelShader(psCode);
 
     m_inputlayout = m_device.CreateInputLayout(VertexPositionNormal::Layout, vsCode);
-
-    vsCode       = m_device.LoadByteCode(shadersDir / L"particleVS.cso");
-    psCode       = m_device.LoadByteCode(shadersDir / L"particlePS.cso");
-    gsCode       = m_device.LoadByteCode(shadersDir / L"particleGS.cso");
-    m_particleVS = m_device.CreateVertexShader(vsCode);
-    m_particlePS = m_device.CreatePixelShader(psCode);
-    m_particleGS = m_device.CreateGeometryShader(gsCode);
-
     m_device.context()->IASetInputLayout(m_inputlayout.get());
     m_device.context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -154,36 +139,6 @@ bool DuckDemo::HandleCameraInput(double dt)
     KeyboardState kstate;
     if (m_keyboard.GetState(kstate))
     {
-        if (kstate.isKeyDown(DIK_W))
-        {
-            m_currentCamera->MoveTarget(m_currentCamera->getForwardDir() * MOVE_SPEED * dt);
-            result = true;
-        }
-        if (kstate.isKeyDown(DIK_S))
-        {
-            m_currentCamera->MoveTarget(-m_currentCamera->getForwardDir() * MOVE_SPEED * dt);
-            result = true;
-        }
-        if (kstate.isKeyDown(DIK_D))
-        {
-            m_currentCamera->MoveTarget(m_currentCamera->getRightDir() * MOVE_SPEED * dt);
-            result = true;
-        }
-        if (kstate.isKeyDown(DIK_A))
-        {
-            m_currentCamera->MoveTarget(-m_currentCamera->getRightDir() * MOVE_SPEED * dt);
-            result = true;
-        }
-        if (kstate.isKeyDown(DIK_E))
-        {
-            m_currentCamera->MoveTarget(XMVectorSet(0.F, 1.F, 0.F, 0.F) * MOVE_SPEED * dt);
-            result = true;
-        }
-        if (kstate.isKeyDown(DIK_Q))
-        {
-            m_currentCamera->MoveTarget(XMVectorSet(0.F, -1.F, 0.F, 0.F) * MOVE_SPEED * dt);
-            result = true;
-        }
     }
 
     MouseState mstate;
@@ -192,7 +147,12 @@ bool DuckDemo::HandleCameraInput(double dt)
         auto d = mstate.getMousePositionChange();
         if (mstate.isButtonDown(0))
         {
-            m_currentCamera->Rotate(d.y * ROTATION_SPEED * dt, d.x * ROTATION_SPEED * dt);
+            m_orbitCamera.Rotate(d.y * ROTATION_SPEED * dt, d.x * ROTATION_SPEED * dt);
+            result = true;
+        }
+        if (mstate.isButtonDown(1))
+        {
+            m_orbitCamera.Zoom(d.x * ZOOM_SPEED * dt);
             result = true;
         }
     }
@@ -225,19 +185,6 @@ void DuckDemo::DrawMesh(const Mesh& m, DirectX::XMFLOAT4X4 worldMtx)
     m.Render(m_device.context());
 }
 
-void mini::gk2::DuckDemo::SetCameraMode(bool orbit)
-{
-    if (orbit)
-    {
-        m_currentCamera = &m_orbitCamera;
-    }
-    else
-    {
-        m_currentCamera = &m_fpsCamera;
-    }
-    m_useOrbitCamera = orbit;
-}
-
 void DuckDemo::DrawRoomWalls()
 {
     SetSurfaceColor(ROOM_WALLS_COLOR);
@@ -248,7 +195,8 @@ void DuckDemo::DrawRoomWalls()
 
 void DuckDemo::DrawScene()
 {
-    SetShaders(m_phongVS, m_phongPS);
+    SetShaders(m_envVS, m_envPS);
+    SetTextures({m_envTexture.get()}, m_samplerWrap);
     DrawRoomWalls();
 }
 

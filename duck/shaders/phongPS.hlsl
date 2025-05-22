@@ -14,7 +14,6 @@ struct PSInput
     float3 worldPos : POSITION0;
     float3 norm : NORMAL0;
     float3 viewVec : TEXCOORD0;
-    float clipDistance : SV_ClipDistance0;
 };
 
 static const float3 ambientColor = float3(0.2f, 0.2f, 0.2f);

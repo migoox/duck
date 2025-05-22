@@ -19,7 +19,6 @@
     <ClCompile Include="dinput\mouse.cpp" />
     <ClCompile Include="utils\exceptions.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pumaDemo.cpp" />
     <ClCompile Include="utils\path.cpp" />
     <ClCompile Include="utils\pch.cpp" />
     <ClCompile Include="win\window.cpp" />
@@ -27,6 +26,8 @@
     <ClCompile Include="d3dx\DDSTextureLoader.cpp" />
     <ClCompile Include="d3dx\WICTextureLoader.cpp" />
     <ClCompile Include="d3dx\shadowVolume.cpp" />
+    <ClCompile Include="particleSystem.cpp" />
+    <ClCompile Include="duckDemo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dx\camera.h" />
@@ -44,7 +45,6 @@
     <ClInclude Include="utils\compressed_pair.h" />
     <ClInclude Include="utils\exceptions.h" />
     <ClInclude Include="utils\ptr_vector.h" />
-    <ClInclude Include="pumaDemo.h" />
     <ClInclude Include="utils\path.h" />
     <ClInclude Include="utils\pch.h" />
     <ClInclude Include="win\clock.h" />
@@ -54,20 +54,33 @@
     <ClInclude Include="d3dx\WICTextureLoader.h" />
     <ClInclude Include="d3dx\shadowVolume.h" />
     <ClInclude Include="utils\hashCombine.h" />
+    <ClInclude Include="particleSystem.h" />
+    <ClInclude Include="duckDemo.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\phongPS.hlsl" />
     <FxCompile Include="shaders\phongVS.hlsl" />
     <FxCompile Include="shaders\texturedPS.hlsl" />
     <FxCompile Include="shaders\texturedVS.hlsl" />
-    <FxCompile Include="shaders\shadowVolumeGS.hlsl" />
-    <FxCompile Include="shaders\shadowVolumePS.hlsl" />
-    <FxCompile Include="shaders\shadowVolumeVS.hlsl" />
-    <FxCompile Include="shaders\ambientPS.hlsl" />
+    <FxCompile Include="shaders\solidColorPS.hlsl" />
+    <FxCompile Include="shaders\envPS.hlsl" />
+    <FxCompile Include="shaders\envVS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\metal.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="resources\textures\smoke.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\smokecolors.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\ducktex.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\cubeMap.dds" />
+    <Image Include="resources\textures\cubeMapIrradiance.dds" />
+    <Image Include="resources\textures\cubeMapRadiance.dds" />
   </ItemGroup>
 </Project>

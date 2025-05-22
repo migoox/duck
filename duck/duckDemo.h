@@ -28,7 +28,7 @@ class DuckDemo : public DxApplication
 
     void UpdateCameraCB()
     {
-        UpdateCameraCB(m_currentCamera->getViewMatrix());
+        UpdateCameraCB(m_orbitCamera.getViewMatrix());
     }
 
     void DrawMesh(const Mesh& m, DirectX::XMFLOAT4X4 worldMtx);
@@ -44,8 +44,6 @@ class DuckDemo : public DxApplication
         SetTextures(std::move(resList), m_samplerWrap);
     }
 
-    void SetCameraMode(bool orbit = true);
-
     void DrawRoomWalls();
     void DrawScene();
 
@@ -58,6 +56,10 @@ class DuckDemo : public DxApplication
     static constexpr float ROOM_WIDTH   = 10.f;
     static constexpr float ROOM_HEIGHT  = 6.f;
     static constexpr float ROOM_DEPTH   = 8.f;
+
+    static constexpr float ROTATION_SPEED = 7.f;
+    static constexpr float ZOOM_SPEED     = 4.f;
+
 #pragma endregion
 
 #pragma region MEMBERS
@@ -79,26 +81,19 @@ class DuckDemo : public DxApplication
 
     dx_ptr<ID3D11InputLayout> m_inputlayout;
 
+    dx_ptr<ID3D11ShaderResourceView> m_envTexture;
+
     dx_ptr<ID3D11VertexShader> m_phongVS;
     dx_ptr<ID3D11PixelShader> m_phongPS;
     dx_ptr<ID3D11VertexShader> m_texturedVS;
     dx_ptr<ID3D11PixelShader> m_texturedPS;
-    dx_ptr<ID3D11GeometryShader> m_shadowVolumeGS;
-    dx_ptr<ID3D11VertexShader> m_shadowVolumeVS;
-    dx_ptr<ID3D11PixelShader> m_solidColorPS;
-    dx_ptr<ID3D11PixelShader> m_ambientPS;
-    dx_ptr<ID3D11VertexShader> m_particleVS;
-    dx_ptr<ID3D11GeometryShader> m_particleGS;
-    dx_ptr<ID3D11PixelShader> m_particlePS;
+    dx_ptr<ID3D11VertexShader> m_envVS;
+    dx_ptr<ID3D11PixelShader> m_envPS;
 
     KeyboardState m_prevKeyboardState;
     KeyboardState m_currKeyboardState;
 
-    FPSCamera m_fpsCamera;
     OrbitCamera m_orbitCamera;
-
-    OrbitCamera* m_currentCamera;
-    bool m_useOrbitCamera = true;
 
     bool m_isAnimated = true;
 #pragma endregion

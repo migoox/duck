@@ -51,9 +51,6 @@ class DxApplication : public mini::WindowApplication
     Mouse m_mouse;
     Keyboard m_keyboard;
 
-    static constexpr float ROTATION_SPEED = 5.f;
-    static constexpr float MOVE_SPEED     = 3.f;
-
   protected:
     mini::dx_ptr<ID3D11DepthStencilView> m_depthBuffer;
 
