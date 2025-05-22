@@ -1,0 +1,107 @@
+#pragma once
+#include "dxApplication.h"
+#include "mesh.h"
+#include "particleSystem.h"
+
+namespace mini::gk2
+{
+
+class DuckDemo : public DxApplication
+{
+  public:
+    using Base = DxApplication;
+
+    explicit DuckDemo(HINSTANCE appInstance);
+    ~DuckDemo() final = default;
+
+  protected:
+    void Update(const Clock& c) override;
+    void Render() override;
+
+  private:
+    void CreateRenderStates();
+
+    void HandleControls(double dt);
+    bool HandleCameraInput(double dt);
+
+    void UpdateCameraCB(DirectX::XMMATRIX viewMtx);
+
+    void UpdateCameraCB()
+    {
+        UpdateCameraCB(m_currentCamera->getViewMatrix());
+    }
+
+    void DrawMesh(const Mesh& m, DirectX::XMFLOAT4X4 worldMtx);
+
+    void SetWorldMtx(DirectX::XMFLOAT4X4 mtx);
+    void SetSurfaceColor(DirectX::XMFLOAT4 color);
+    void SetShaders(const dx_ptr<ID3D11VertexShader>& vs, const dx_ptr<ID3D11PixelShader>& ps);
+
+    void SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList,
+                     const dx_ptr<ID3D11SamplerState>& sampler);
+    void SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList)
+    {
+        SetTextures(std::move(resList), m_samplerWrap);
+    }
+
+    void SetCameraMode(bool orbit = true);
+
+    void DrawRoomWalls();
+    void DrawScene();
+
+#pragma region CONSTANTS
+    // can't have in-class initializer since XMFLOAT... types' constructors are not constexpr
+    static const DirectX::XMFLOAT4 LIGHT_POS[2];
+    static const DirectX::XMFLOAT4 ROOM_WALLS_COLOR;
+    static constexpr size_t PUMA_PARTS  = 6;
+    static constexpr size_t ANGLE_COUNT = 5;
+    static constexpr float ROOM_WIDTH   = 10.f;
+    static constexpr float ROOM_HEIGHT  = 6.f;
+    static constexpr float ROOM_DEPTH   = 8.f;
+#pragma endregion
+
+#pragma region MEMBERS
+
+    dx_ptr<ID3D11Buffer> m_cbWorldMtx, // vertex shader constant buffer slot 0
+        m_cbProjMtx,                   // vertex shader constant buffer slot 2 & geometry shader constant buffer slot 0
+        m_cbTexMtx;                    // vertex shader constant buffer slot 3
+    dx_ptr<ID3D11Buffer> m_cbViewMtx;  // vertex shader constant buffer slot 1
+
+    dx_ptr<ID3D11Buffer> m_cbSurfaceColor; // pixel shader constant buffer slot 0
+    dx_ptr<ID3D11Buffer> m_cbLightPos;     // pixel shader constant buffer slot 1
+
+    Mesh m_roomWalls;
+
+    DirectX::XMFLOAT4X4 m_projMtx;
+
+    dx_ptr<ID3D11SamplerState> m_samplerWrap;
+    dx_ptr<ID3D11BlendState> m_bsAlpha;
+
+    dx_ptr<ID3D11InputLayout> m_inputlayout;
+
+    dx_ptr<ID3D11VertexShader> m_phongVS;
+    dx_ptr<ID3D11PixelShader> m_phongPS;
+    dx_ptr<ID3D11VertexShader> m_texturedVS;
+    dx_ptr<ID3D11PixelShader> m_texturedPS;
+    dx_ptr<ID3D11GeometryShader> m_shadowVolumeGS;
+    dx_ptr<ID3D11VertexShader> m_shadowVolumeVS;
+    dx_ptr<ID3D11PixelShader> m_solidColorPS;
+    dx_ptr<ID3D11PixelShader> m_ambientPS;
+    dx_ptr<ID3D11VertexShader> m_particleVS;
+    dx_ptr<ID3D11GeometryShader> m_particleGS;
+    dx_ptr<ID3D11PixelShader> m_particlePS;
+
+    KeyboardState m_prevKeyboardState;
+    KeyboardState m_currKeyboardState;
+
+    FPSCamera m_fpsCamera;
+    OrbitCamera m_orbitCamera;
+
+    OrbitCamera* m_currentCamera;
+    bool m_useOrbitCamera = true;
+
+    bool m_isAnimated = true;
+#pragma endregion
+};
+
+} // namespace mini::gk2

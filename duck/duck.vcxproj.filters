@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="d3dx\camera.cpp" />
+    <ClCompile Include="d3dx\dxApplication.cpp" />
+    <ClCompile Include="d3dx\dxDevice.cpp" />
+    <ClCompile Include="d3dx\dxStructures.cpp" />
+    <ClCompile Include="d3dx\mesh.cpp" />
+    <ClCompile Include="d3dx\vertexTypes.cpp" />
+    <ClCompile Include="dinput\diDeviceBase.cpp" />
+    <ClCompile Include="dinput\diInstance.cpp" />
+    <ClCompile Include="dinput\keyboard.cpp" />
+    <ClCompile Include="dinput\mouse.cpp" />
+    <ClCompile Include="utils\exceptions.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="pumaDemo.cpp" />
+    <ClCompile Include="utils\path.cpp" />
+    <ClCompile Include="utils\pch.cpp" />
+    <ClCompile Include="win\window.cpp" />
+    <ClCompile Include="win\windowApplication.cpp" />
+    <ClCompile Include="d3dx\DDSTextureLoader.cpp" />
+    <ClCompile Include="d3dx\WICTextureLoader.cpp" />
+    <ClCompile Include="d3dx\shadowVolume.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="d3dx\camera.h" />
+    <ClInclude Include="d3dx\dxApplication.h" />
+    <ClInclude Include="d3dx\dxDevice.h" />
+    <ClInclude Include="d3dx\dxptr.h" />
+    <ClInclude Include="d3dx\dxStructures.h" />
+    <ClInclude Include="d3dx\mesh.h" />
+    <ClInclude Include="d3dx\vertexTypes.h" />
+    <ClInclude Include="dinput\diDeviceBase.h" />
+    <ClInclude Include="dinput\diInstance.h" />
+    <ClInclude Include="dinput\diptr.h" />
+    <ClInclude Include="dinput\keyboard.h" />
+    <ClInclude Include="dinput\mouse.h" />
+    <ClInclude Include="utils\compressed_pair.h" />
+    <ClInclude Include="utils\exceptions.h" />
+    <ClInclude Include="utils\ptr_vector.h" />
+    <ClInclude Include="pumaDemo.h" />
+    <ClInclude Include="utils\path.h" />
+    <ClInclude Include="utils\pch.h" />
+    <ClInclude Include="win\clock.h" />
+    <ClInclude Include="win\window.h" />
+    <ClInclude Include="win\windowApplication.h" />
+    <ClInclude Include="d3dx\DDSTextureLoader.h" />
+    <ClInclude Include="d3dx\WICTextureLoader.h" />
+    <ClInclude Include="d3dx\shadowVolume.h" />
+    <ClInclude Include="utils\hashCombine.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\phongPS.hlsl" />
+    <FxCompile Include="shaders\phongVS.hlsl" />
+    <FxCompile Include="shaders\texturedPS.hlsl" />
+    <FxCompile Include="shaders\texturedVS.hlsl" />
+    <FxCompile Include="shaders\shadowVolumeGS.hlsl" />
+    <FxCompile Include="shaders\shadowVolumePS.hlsl" />
+    <FxCompile Include="shaders\shadowVolumeVS.hlsl" />
+    <FxCompile Include="shaders\ambientPS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\metal.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
