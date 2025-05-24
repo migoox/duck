@@ -62,6 +62,8 @@ void mini::gk2::WaterSurfaceSimulation::Step()
     auto h = 2.f / static_cast<float>(m_samplesCount - 1);
     auto a = m_velocity * m_velocity * m_stepTime * m_stepTime / h / h;
     auto b = 2.f - 4.f * a;
+
+    // Edges are unchanged (Miguel Gomez, Game Programming Gems 1)
     for (auto i = 1; i < m_samplesCount - 1; i++)
     {
         for (auto j = 1; j < m_samplesCount - 1; j++)
@@ -69,14 +71,15 @@ void mini::gk2::WaterSurfaceSimulation::Step()
             auto aa = a * (GetValue(curr, i + 1, j) + GetValue(curr, i - 1, j) + GetValue(curr, i, j - 1) +
                            GetValue(curr, i, j + 1));
             auto bb = b * GetValue(curr, i, j) - GetValue(next, i, j);
-            SetValue(next, i, j, 0.96f * (aa + bb));
+            SetValue(next, i, j, GetValue(m_distances, i, j) * (aa + bb));
         }
     }
 
     SwapHeightBuffers();
 
-    // Add new distortions
-    if (m_uniformDist(m_randGenerator) > m_samplesCount - static_cast<int>(m_samplesCount * DROP_PROBABILITY))
+    // Add new drops
+    if (m_uniformDist(m_randGenerator) >
+        m_samplesCount - static_cast<int>(static_cast<float>(m_samplesCount) * DROP_PROBABILITY))
     {
         auto i = m_uniformDist(m_randGenerator);
         auto j = m_uniformDist(m_randGenerator);
@@ -104,24 +107,35 @@ void mini::gk2::WaterSurfaceSimulation::InitNormalMap()
 void mini::gk2::WaterSurfaceSimulation::UpdateNormalMap()
 {
     PROFILE_ZONE("WaterSurfaceSimulation::UpdateNormalMap")
-    auto max = *std::max_element(GetCurrentHeightBuffer().begin(), GetCurrentHeightBuffer().end());
-    auto min = *std::min_element(GetCurrentHeightBuffer().begin(), GetCurrentHeightBuffer().end());
-    std::cout << "min: " << min << " max: " << max << std::endl;
-
     auto& curr = GetCurrentHeightBuffer();
-    for (auto i = 0; i < m_samplesCount; i++)
+    // Blinn method (https://en.wikipedia.org/wiki/Bump_mapping#Methods)
+    for (auto i = 1; i < m_samplesCount - 1; i++)
     {
-        for (auto j = 0; j < m_samplesCount; j++)
+        for (auto j = 1; j < m_samplesCount - 1; j++)
         {
-            auto normIdx = (i * m_samplesCount + j) * 4;
-            auto idx     = i * m_samplesCount + j;
 
-            auto normalized = curr[idx];
-            auto level      = std::min<float>((curr[idx] + DROP_HEIGHT) / 2.f / DROP_HEIGHT, 1.f) * 255.f;
+            // 1. Gradient approx with finite difference (https://en.wikipedia.org/wiki/Finite_difference) for each
+            // partial derivative
+            auto dx = curr[m_samplesCount * i + (j - 1)] - curr[m_samplesCount * i + (j + 1)];
+            auto dy = 1.f;
+            auto dz = curr[m_samplesCount * (i - 1) + j] - curr[m_samplesCount * (i + 1) + j];
 
-            m_normalMap[normIdx]     = static_cast<BYTE>(level);
-            m_normalMap[normIdx + 1] = static_cast<BYTE>(level);
-            m_normalMap[normIdx + 2] = static_cast<BYTE>(level);
+            // 2. Normalize
+            const auto denom = std::sqrt(dx * dx + dy * dy + dz * dz);
+            dx               = dx / denom;
+            dy               = dy / denom;
+            dz               = dz / denom;
+
+            // 3. [-1, -1] -> [0, 1]
+            dx = (dx + 1.f) / 2.f;
+            dy = (dy + 1.f) / 2.f;
+            dz = (dz + 1.f) / 2.f;
+
+            const auto normIdx = 4 * (i * m_samplesCount + j);
+
+            m_normalMap[normIdx]     = static_cast<BYTE>(dx * 255.f);
+            m_normalMap[normIdx + 1] = static_cast<BYTE>(dy * 255.f);
+            m_normalMap[normIdx + 2] = static_cast<BYTE>(dz * 255.f);
             m_normalMap[normIdx + 3] = 255; // alpha
         }
     }

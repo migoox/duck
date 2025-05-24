@@ -54,17 +54,10 @@ float3 intersectRay(float3 origin, float3 dir)
 float4 main(PSInput i) : SV_TARGET
 {
     float2 tex = 0.5 * (i.inCubePos.xz + float2(1.0, 1.0));
-    float2 texelSize = 1.0 / 256.0;
-
-    float height = surfaceNormalMap.Sample(normalMapSamp, tex).r;
-    float dx = surfaceNormalMap.Sample(normalMapSamp, tex + float2(texelSize.x, 0.0)).r - height;
-    float dy = surfaceNormalMap.Sample(normalMapSamp, tex + float2(0.0, texelSize.y)).r - height;
-    float3 norm = normalize(float3(-dx, 1.0, -dy));
-
-    //return float4(height, height, height, 1.0);
+    float3 norm = surfaceNormalMap.Sample(normalMapSamp, tex);
+    norm = norm * 2.0 - 1.0;
 
     float3 camPos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
-
     float3 viewVec = normalize(camPos - i.worldPos);
     if (dot(viewVec, norm) > 0.0)
     {

@@ -10,9 +10,9 @@ class WaterSurfaceSimulation
 
     static constexpr int SAMPLES_DEFAULT_SIZE = 256;
     static constexpr float DEFAULT_VELOCITY   = 1;
-    static constexpr float DROP_HEIGHT        = 0.25f;
+    static constexpr float DROP_HEIGHT        = 0.6f;
 
-    static constexpr float ANIMATION_SPEED  = 0.3f;
+    static constexpr float ANIMATION_SPEED  = 0.2f;
     static constexpr float DROP_PROBABILITY = 0.2f;
 
     void Update(float dt);
@@ -40,12 +40,12 @@ class WaterSurfaceSimulation
         m_currentHeightBuffer = (m_currentHeightBuffer + 1) % 2;
     }
 
-    float GetValue(const std::vector<float>& buff, int i, int j) const
+    template <typename T> T GetValue(const std::vector<T>& buff, int i, int j) const
     {
         return buff[i * m_samplesCount + j];
     }
 
-    float SetValue(std::vector<float>& buff, int i, int j, float val) const
+    template <typename T> T SetValue(std::vector<T>& buff, int i, int j, float val) const
     {
         return buff[i * m_samplesCount + j] = val;
     }
