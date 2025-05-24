@@ -1,7 +1,5 @@
-cbuffer cbSurfaceColor : register(b0)
-{
-    float4 surfaceColor;
-};
+Texture2D albedo : register(t0);
+SamplerState samp : register(s0);
 
 cbuffer cbLights : register(b1)
 {
@@ -13,7 +11,8 @@ struct PSInput
     float4 pos : SV_POSITION;
     float3 worldPos : POSITION0;
     float3 norm : NORMAL0;
-    float3 viewVec : TEXCOORD0;
+    float2 tex : TEXCOORD0;
+    float3 viewVec : TEXCOORD1;
 };
 
 static const float3 ambientColor = float3(0.2f, 0.2f, 0.2f);
@@ -22,6 +21,8 @@ static const float kd = 0.5, ks = 0.2f, m = 100.0f;
 
 float4 main(PSInput i) : SV_TARGET
 {
+    const float4 surfaceColor = albedo.Sample(samp, i.tex);
+
     float3 viewVec = normalize(i.viewVec);
     float3 normal = normalize(i.norm);
     float3 color = surfaceColor.rgb * ambientColor;
@@ -30,7 +31,7 @@ float4 main(PSInput i) : SV_TARGET
         float3 lightPosition = lightPos[k].xyz;
         float3 lightVec = normalize(lightPosition - i.worldPos);
         float3 halfVec = normalize(viewVec + lightVec);
-        color += lightColor * surfaceColor.xyz * kd * saturate(dot(normal, lightVec)); //diffuse color
+        color += lightColor * surfaceColor.rgb * kd * saturate(dot(normal, lightVec)); //diffuse color
         float nh = dot(normal, halfVec);
         nh = saturate(nh);
         nh = pow(nh, m);

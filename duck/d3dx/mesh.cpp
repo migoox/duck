@@ -462,18 +462,24 @@ Mesh mini::Mesh::LoadMesh(const DxDevice& device, const std::filesystem::path& m
     input.exceptions(ios::badbit | ios::failbit | ios::eofbit);
     input.open(meshPath);
 
-    int vn, in;
-    input >> vn >> in;
+    int vn;
+    input >> vn;
 
-    vector<VertexPositionNormal> verts(vn);
-    XMFLOAT2 ignoreTextureCoords;
+    vector<VertexPositionNormalTexCoords> verts(vn);
     for (auto i = 0; i < vn; ++i)
+    {
         input >> verts[i].position.x >> verts[i].position.y >> verts[i].position.z >> verts[i].normal.x >>
-            verts[i].normal.y >> verts[i].normal.z >> ignoreTextureCoords.x >> ignoreTextureCoords.y;
+            verts[i].normal.y >> verts[i].normal.z >> verts[i].tex.x >> verts[i].tex.y;
+    }
 
-    vector<unsigned short> inds(in);
+    int in;
+    input >> in;
+    vector<unsigned short> inds(3 * in);
     for (auto i = 0; i < in; ++i)
-        input >> inds[i];
+    {
+        input >> inds[3 * i] >> inds[3 * i + 1] >> inds[3 * i + 2];
+    }
+
     return SimpleTriMesh(device, verts, inds);
 }
 

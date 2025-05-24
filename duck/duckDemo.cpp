@@ -41,6 +41,10 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     m_waterPlane = Mesh::Rectangle(*m_device, 2.f);
     DirectX::XMStoreFloat4x4(&m_waterPlaneMtx, XMMatrixScaling(ROOM_SIZE / 2.f, ROOM_SIZE / 2.f, ROOM_SIZE / 2.f));
 
+    auto meshesDir = Path::MeshesDir();
+    m_duck         = Mesh::LoadMesh(*m_device, meshesDir / "duck" / "duck.txt");
+    DirectX::XMStoreFloat4x4(&m_duckMtx, XMMatrixScaling(1.f / DUCK_SCALE, 1.f / DUCK_SCALE, 1.f / DUCK_SCALE));
+
     // Constant buffers content
     UpdateBuffer(m_cbLightPos, LIGHT_POS);
 
@@ -48,8 +52,9 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     CreateRenderStates();
 
     // Textures
-    auto texturesDir = Path::TexturesDir();
-    m_envTextureView = m_device->CreateShaderResourceView(texturesDir / "cubeMap.dds");
+    auto texturesDir  = Path::TexturesDir();
+    m_envTextureView  = m_device->CreateShaderResourceView(texturesDir / "cubeMap.dds");
+    m_duckTextureView = m_device->CreateShaderResourceView(texturesDir / "ducktex.jpg");
     CreateWaterSurfaceTexture();
 
     //  Shaders
@@ -59,7 +64,7 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     auto psCode        = m_device->LoadByteCode(shadersDir / L"phongPS.cso");
     m_phongVS          = m_device->CreateVertexShader(vsCode);
     m_phongPS          = m_device->CreatePixelShader(psCode);
-    m_phongInputLayout = m_device->CreateInputLayout(VertexPositionNormal::Layout, vsCode);
+    m_phongInputLayout = m_device->CreateInputLayout(VertexPositionNormalTexCoords::Layout, vsCode);
 
     vsCode       = m_device->LoadByteCode(shadersDir / L"texturedVS.cso");
     psCode       = m_device->LoadByteCode(shadersDir / L"texturedPS.cso");
@@ -272,6 +277,11 @@ void mini::gk2::DuckDemo::DrawWater()
     m_device->context()->RSSetState(rsPrev);
 }
 
+void mini::gk2::DuckDemo::DrawDuck()
+{
+    DrawMesh(m_duck, m_duckMtx);
+}
+
 void DuckDemo::DrawScene()
 {
     SetShaders(m_envVS, m_envPS, m_envInputLayout);
@@ -282,6 +292,10 @@ void DuckDemo::DrawScene()
     SetTextures({m_envTextureView.get(), m_waterSurfaceTextureView.get()},
                 {m_samplerWrap.get(), m_samplerNormalMap.get()});
     DrawWater();
+
+    SetShaders(m_phongVS, m_phongPS, m_phongInputLayout);
+    SetTextures({m_duckTextureView.get()}, {m_samplerWrap.get()});
+    DrawDuck();
 }
 
 void DuckDemo::Render()

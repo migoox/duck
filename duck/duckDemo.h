@@ -46,6 +46,7 @@ class DuckDemo : public DxApplication
     void DrawRoomWalls();
     void DrawWater();
     void DrawScene();
+    void DrawDuck();
 
 #pragma region CONSTANTS
     // can't have in-class initializer since XMFLOAT... types' constructors are not constexpr
@@ -56,6 +57,7 @@ class DuckDemo : public DxApplication
     static constexpr float ROOM_SIZE      = 10.f;
     static constexpr float ROTATION_SPEED = 7.f;
     static constexpr float ZOOM_SPEED     = 5.f;
+    static constexpr float DUCK_SCALE     = 200.f;
 
 #pragma endregion
 
@@ -72,13 +74,14 @@ class DuckDemo : public DxApplication
 #pragma region MESHES
     Mesh m_roomWalls;
     Mesh m_waterPlane;
+    Mesh m_duck;
 #pragma endregion
 
 #pragma region MATRICES
-    DirectX::XMFLOAT4X4 m_projMtx, m_waterPlaneMtx;
+    DirectX::XMFLOAT4X4 m_projMtx, m_waterPlaneMtx, m_duckMtx;
 #pragma endregion
 
-#pragma region STATES
+#pragma region STATES_AND_LAYOUTS
     dx_ptr<ID3D11SamplerState> m_samplerWrap;
     dx_ptr<ID3D11SamplerState> m_samplerNormalMap;
     dx_ptr<ID3D11BlendState> m_bsAlpha;
@@ -90,7 +93,8 @@ class DuckDemo : public DxApplication
     dx_ptr<ID3D11RasterizerState> m_rsCullNone;
 #pragma endregion
 
-#pragma region MATRICES
+#pragma region SHADERS
+    dx_ptr<ID3D11ShaderResourceView> m_duckTextureView;
     dx_ptr<ID3D11ShaderResourceView> m_envTextureView;
     dx_ptr<ID3D11ShaderResourceView> m_waterSurfaceTextureView;
     dx_ptr<ID3D11Texture2D> m_waterSurfaceTexture;

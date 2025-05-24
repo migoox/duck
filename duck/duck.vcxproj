@@ -206,6 +206,9 @@
     <Image Include="resources\textures\smoke.png" />
     <Image Include="resources\textures\smokecolors.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="resources\meshes\duck\duck.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{F2F55E95-8DA0-4EFD-8A46-9405FFCD3C1B}</ProjectGuid>

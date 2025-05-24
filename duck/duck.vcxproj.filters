@@ -88,4 +88,7 @@
     <Image Include="resources\textures\cubeMapIrradiance.dds" />
     <Image Include="resources\textures\cubeMapRadiance.dds" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="resources\meshes\duck\duck.txt" />
+  </ItemGroup>
 </Project>

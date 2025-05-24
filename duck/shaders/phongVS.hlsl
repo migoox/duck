@@ -18,6 +18,7 @@ struct VSInput
 {
     float3 pos : POSITION;
     float3 norm : NORMAL0;
+    float3 tex : TEXCOORD0;
 };
 
 struct PSInput
@@ -25,7 +26,8 @@ struct PSInput
     float4 pos : SV_POSITION;
     float3 worldPos : POSITION0;
     float3 norm : NORMAL0;
-    float3 viewVec : TEXCOORD0;
+    float2 tex : TEXCOORD0;
+    float3 viewVec : TEXCOORD1;
 };
 
 PSInput main(VSInput i)
@@ -38,6 +40,7 @@ PSInput main(VSInput i)
     o.norm = normalize(o.norm);
     float3 camPos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
     o.viewVec = camPos - o.worldPos;
+    o.tex = i.tex;
     
     return o;
 }
