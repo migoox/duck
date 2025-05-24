@@ -58,6 +58,7 @@
     <ClInclude Include="duckDemo.h" />
     <ClInclude Include="d3dx\shaderPass.h" />
     <ClInclude Include="waterSurfaceSimulation.h" />
+    <ClInclude Include="utils\profiling.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\phongPS.hlsl" />

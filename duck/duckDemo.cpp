@@ -99,11 +99,13 @@ void mini::gk2::DuckDemo::CreateWaterSurfaceTexture()
     desc.Height               = WaterSurfaceSimulation::SAMPLES_DEFAULT_SIZE;
     desc.MipLevels            = 1;
     desc.ArraySize            = 1;
-    desc.Format               = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    desc.Format               = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.SampleDesc.Count     = 1;
+    desc.SampleDesc.Quality   = 0;
     desc.Usage                = D3D11_USAGE_DYNAMIC;
     desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
     desc.CPUAccessFlags       = D3D11_CPU_ACCESS_WRITE;
+    desc.MiscFlags            = 0;
 
     m_waterSurfaceTexture = m_device->CreateTexture(desc);
 
@@ -135,6 +137,21 @@ void mini::gk2::DuckDemo::CreateRenderStates()
     sd.MaxLOD         = D3D11_FLOAT32_MAX;
 
     m_samplerWrap = m_device->CreateSamplerState(sd);
+
+    sd.Filter         = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+    sd.AddressU       = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressV       = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressW       = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.MaxAnisotropy  = 16;
+    sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sd.BorderColor[0] = 1.f;
+    sd.BorderColor[1] = 1.f;
+    sd.BorderColor[2] = 1.f;
+    sd.BorderColor[3] = 1.f;
+    sd.MinLOD         = 0;
+    sd.MaxLOD         = 0;
+
+    m_samplerNormalMap = m_device->CreateSamplerState(sd);
 
     // Setup rasterizer without culling
     RasterizerDescription rsDesc;
@@ -222,12 +239,12 @@ void mini::gk2::DuckDemo::SetShaders(const dx_ptr<ID3D11VertexShader>& vs, const
     m_device->context()->PSSetShader(ps.get(), nullptr, 0);
 }
 
-void DuckDemo::SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList,
-                           const dx_ptr<ID3D11SamplerState>& sampler)
+void mini::gk2::DuckDemo::SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList,
+                                      std::initializer_list<ID3D11SamplerState*> samplerList)
 {
+
     m_device->context()->PSSetShaderResources(0, resList.size(), resList.begin());
-    auto s_ptr = sampler.get();
-    m_device->context()->PSSetSamplers(0, 1, &s_ptr);
+    m_device->context()->PSSetSamplers(0, samplerList.size(), samplerList.begin());
 }
 
 void DuckDemo::DrawMesh(const Mesh& m, DirectX::XMFLOAT4X4 worldMtx)
@@ -258,11 +275,12 @@ void mini::gk2::DuckDemo::DrawWater()
 void DuckDemo::DrawScene()
 {
     SetShaders(m_envVS, m_envPS, m_envInputLayout);
-    SetTextures({m_envTextureView.get()}, m_samplerWrap);
+    SetTextures({m_envTextureView.get()}, {m_samplerWrap.get()});
     DrawRoomWalls();
 
     SetShaders(m_waterVS, m_waterPS, m_waterInputLayout);
-    SetTextures({m_envTextureView.get(), m_waterSurfaceTextureView.get()}, m_samplerWrap);
+    SetTextures({m_envTextureView.get(), m_waterSurfaceTextureView.get()},
+                {m_samplerWrap.get(), m_samplerNormalMap.get()});
     DrawWater();
 }
 

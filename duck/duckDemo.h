@@ -41,11 +41,7 @@ class DuckDemo : public DxApplication
                     const dx_ptr<ID3D11InputLayout>& inputLayout);
 
     void SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList,
-                     const dx_ptr<ID3D11SamplerState>& sampler);
-    void SetTextures(std::initializer_list<ID3D11ShaderResourceView*> resList)
-    {
-        SetTextures(std::move(resList), m_samplerWrap);
-    }
+                     std::initializer_list<ID3D11SamplerState*> samplerList);
 
     void DrawRoomWalls();
     void DrawWater();
@@ -84,6 +80,7 @@ class DuckDemo : public DxApplication
 
 #pragma region STATES
     dx_ptr<ID3D11SamplerState> m_samplerWrap;
+    dx_ptr<ID3D11SamplerState> m_samplerNormalMap;
     dx_ptr<ID3D11BlendState> m_bsAlpha;
 
     dx_ptr<ID3D11InputLayout> m_phongInputLayout;
