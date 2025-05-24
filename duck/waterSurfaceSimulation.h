@@ -10,6 +10,10 @@ class WaterSurfaceSimulation
 
     static constexpr int SAMPLES_DEFAULT_SIZE = 256;
     static constexpr float DEFAULT_VELOCITY   = 1;
+    static constexpr float DROP_HEIGHT        = 0.25f;
+
+    static constexpr float ANIMATION_SPEED  = 0.3f;
+    static constexpr float DROP_PROBABILITY = 0.2f;
 
     void Update(float dt);
     void MapToSurfaceTexture(::mini::DxDevice& device, dx_ptr<ID3D11Texture2D>& texture);

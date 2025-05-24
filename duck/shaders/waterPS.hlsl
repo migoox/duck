@@ -61,9 +61,8 @@ float4 main(PSInput i) : SV_TARGET
     float dy = surfaceNormalMap.Sample(normalMapSamp, tex + float2(0.0, texelSize.y)).r - height;
     float3 norm = normalize(float3(-dx, 1.0, -dy));
 
-    //return float4(norm, 1.0);
+    //return float4(height, height, height, 1.0);
 
-    //float3 norm = float3(0.0, 1.0, 0.0);
     float3 camPos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
 
     float3 viewVec = normalize(camPos - i.worldPos);

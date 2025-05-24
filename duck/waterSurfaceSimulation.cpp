@@ -21,7 +21,7 @@ mini::gk2::WaterSurfaceSimulation::WaterSurfaceSimulation()
 void mini::gk2::WaterSurfaceSimulation::Update(float dt)
 {
     PROFILE_ZONE("WaterSurfaceSimulation::Update");
-    m_deltaTime += dt;
+    m_deltaTime += ANIMATION_SPEED * dt;
     while (m_deltaTime > m_stepTime)
     {
         Step();
@@ -66,9 +66,9 @@ void mini::gk2::WaterSurfaceSimulation::Step()
     {
         for (auto j = 1; j < m_samplesCount - 1; j++)
         {
-            auto bb = b * GetValue(curr, i, j) - GetValue(next, i, j);
             auto aa = a * (GetValue(curr, i + 1, j) + GetValue(curr, i - 1, j) + GetValue(curr, i, j - 1) +
                            GetValue(curr, i, j + 1));
+            auto bb = b * GetValue(curr, i, j) - GetValue(next, i, j);
             SetValue(next, i, j, 0.96f * (aa + bb));
         }
     }
@@ -76,11 +76,11 @@ void mini::gk2::WaterSurfaceSimulation::Step()
     SwapHeightBuffers();
 
     // Add new distortions
-    if (m_uniformDist(m_randGenerator) > m_samplesCount / 2)
+    if (m_uniformDist(m_randGenerator) > m_samplesCount - static_cast<int>(m_samplesCount * DROP_PROBABILITY))
     {
         auto i = m_uniformDist(m_randGenerator);
         auto j = m_uniformDist(m_randGenerator);
-        SetValue(next, i, j, GetValue(next, i, j) + 0.25f);
+        SetValue(next, i, j, GetValue(next, i, j) + DROP_HEIGHT);
     }
 }
 
@@ -104,6 +104,10 @@ void mini::gk2::WaterSurfaceSimulation::InitNormalMap()
 void mini::gk2::WaterSurfaceSimulation::UpdateNormalMap()
 {
     PROFILE_ZONE("WaterSurfaceSimulation::UpdateNormalMap")
+    auto max = *std::max_element(GetCurrentHeightBuffer().begin(), GetCurrentHeightBuffer().end());
+    auto min = *std::min_element(GetCurrentHeightBuffer().begin(), GetCurrentHeightBuffer().end());
+    std::cout << "min: " << min << " max: " << max << std::endl;
+
     auto& curr = GetCurrentHeightBuffer();
     for (auto i = 0; i < m_samplesCount; i++)
     {
@@ -112,7 +116,8 @@ void mini::gk2::WaterSurfaceSimulation::UpdateNormalMap()
             auto normIdx = (i * m_samplesCount + j) * 4;
             auto idx     = i * m_samplesCount + j;
 
-            auto level = std::min<float>(curr[idx], 1.f) * 255.f;
+            auto normalized = curr[idx];
+            auto level      = std::min<float>((curr[idx] + DROP_HEIGHT) / 2.f / DROP_HEIGHT, 1.f) * 255.f;
 
             m_normalMap[normIdx]     = static_cast<BYTE>(level);
             m_normalMap[normIdx + 1] = static_cast<BYTE>(level);
