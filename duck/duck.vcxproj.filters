@@ -29,6 +29,8 @@
     <ClCompile Include="duckDemo.cpp" />
     <ClCompile Include="d3dx\shaderPass.cpp" />
     <ClCompile Include="waterSurfaceSimulation.cpp" />
+    <ClCompile Include="duckSimulation.cpp" />
+    <ClCompile Include="simulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dx\camera.h" />
@@ -59,6 +61,8 @@
     <ClInclude Include="d3dx\shaderPass.h" />
     <ClInclude Include="waterSurfaceSimulation.h" />
     <ClInclude Include="utils\profiling.h" />
+    <ClInclude Include="duckSimulation.h" />
+    <ClInclude Include="simulation.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\phongPS.hlsl" />

@@ -1,12 +1,14 @@
 #pragma once
 #include "dxDevice.h"
+#include "simulation.h"
 #include <random>
 namespace mini::gk2
 {
-class WaterSurfaceSimulation
+class WaterSurfaceSimulation final : public Simulation
 {
   public:
     WaterSurfaceSimulation();
+    ~WaterSurfaceSimulation() final = default;
 
     static constexpr int SAMPLES_DEFAULT_SIZE = 256;
     static constexpr float DEFAULT_VELOCITY   = 1;
@@ -15,12 +17,13 @@ class WaterSurfaceSimulation
     static constexpr float ANIMATION_SPEED  = 0.2f;
     static constexpr float DROP_PROBABILITY = 0.2f;
 
-    void Update(float dt);
     void MapToSurfaceTexture(::mini::DxDevice& device, dx_ptr<ID3D11Texture2D>& texture);
 
-  private:
-    void Step();
+  protected:
+    void Step() final;
+    void PostUpdate() final;
 
+  private:
     void InitNormalMap();
     void UpdateNormalMap();
     void InitDistances();
@@ -57,9 +60,6 @@ class WaterSurfaceSimulation
     int m_currentHeightBuffer;
     int m_samplesCount;
     float m_velocity;
-
-    float m_stepTime;
-    float m_deltaTime;
 
     std::mt19937 m_randGenerator;
     std::uniform_int_distribution<int> m_uniformDist;

@@ -47,10 +47,12 @@
     <ClCompile Include="dinput\diInstance.cpp" />
     <ClCompile Include="dinput\keyboard.cpp" />
     <ClCompile Include="dinput\mouse.cpp" />
+    <ClCompile Include="duckSimulation.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="duckDemo.cpp" />
     <ClCompile Include="d3dx\shadowVolume.cpp" />
     <ClCompile Include="d3dx\shaderPass.cpp" />
+    <ClCompile Include="simulation.cpp" />
     <ClCompile Include="utils\exceptions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -117,6 +119,8 @@
     <ClInclude Include="duckDemo.h" />
     <ClInclude Include="d3dx\shadowVolume.h" />
     <ClInclude Include="d3dx\shaderPass.h" />
+    <ClInclude Include="duckSimulation.h" />
+    <ClInclude Include="simulation.h" />
     <ClInclude Include="utils\compressed_pair.h" />
     <ClInclude Include="utils\exceptions.h" />
     <ClInclude Include="utils\hashCombine.h" />
@@ -417,7 +421,7 @@ move /Y "$(OutDir)*.cso" "$(OutDir)shaders\"</Command>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>../DirectInputUtils;$(ProjectDir)d3dx\;$(ProjectDir)dinput\;$(ProjectDir)shaders\;$(ProjectDir)win\;$(ProjectDir)utils\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp23</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>

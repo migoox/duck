@@ -6,29 +6,18 @@
 #include <iostream>
 
 mini::gk2::WaterSurfaceSimulation::WaterSurfaceSimulation()
-    : m_currentHeightBuffer(0), m_samplesCount(SAMPLES_DEFAULT_SIZE),
-      m_stepTime(1.f / static_cast<float>(SAMPLES_DEFAULT_SIZE)), m_velocity(DEFAULT_VELOCITY),
+    : Simulation(), m_currentHeightBuffer(0), m_samplesCount(SAMPLES_DEFAULT_SIZE), m_velocity(DEFAULT_VELOCITY),
       m_randGenerator(std::random_device{}()), m_uniformDist(0, SAMPLES_DEFAULT_SIZE - 1)
 {
+    SetStepTime(1.f / static_cast<float>(SAMPLES_DEFAULT_SIZE));
+    SetSimSpeed(ANIMATION_SPEED);
+
     GetCurrentHeightBuffer().resize(m_samplesCount * m_samplesCount, 0.f);
     GetNextHeightBuffer().resize(m_samplesCount * m_samplesCount, 0.f);
     m_normalMap.resize(m_samplesCount * m_samplesCount * 4, 0);
     m_distances.resize(m_samplesCount * m_samplesCount, 0.f);
     InitNormalMap();
     InitDistances();
-}
-
-void mini::gk2::WaterSurfaceSimulation::Update(float dt)
-{
-    PROFILE_ZONE("WaterSurfaceSimulation::Update");
-    m_deltaTime += ANIMATION_SPEED * dt;
-    while (m_deltaTime > m_stepTime)
-    {
-        Step();
-        m_deltaTime -= m_stepTime;
-    }
-    m_deltaTime = std::max<float>(m_deltaTime, 0.f);
-    UpdateNormalMap();
 }
 
 void mini::gk2::WaterSurfaceSimulation::MapToSurfaceTexture(DxDevice& device, dx_ptr<ID3D11Texture2D>& texture)
@@ -56,11 +45,13 @@ void mini::gk2::WaterSurfaceSimulation::MapToSurfaceTexture(DxDevice& device, dx
 void mini::gk2::WaterSurfaceSimulation::Step()
 {
     PROFILE_ZONE("WaterSurfaceSimulation::Step");
+    auto stepTime = StepTime();
+
     auto& curr = GetCurrentHeightBuffer();
     auto& next = GetNextHeightBuffer();
 
     auto h = 2.f / static_cast<float>(m_samplesCount - 1);
-    auto a = m_velocity * m_velocity * m_stepTime * m_stepTime / h / h;
+    auto a = m_velocity * m_velocity * stepTime * stepTime / h / h;
     auto b = 2.f - 4.f * a;
 
     // Edges are unchanged (Miguel Gomez, Game Programming Gems 1)
@@ -85,6 +76,11 @@ void mini::gk2::WaterSurfaceSimulation::Step()
         auto j = m_uniformDist(m_randGenerator);
         SetValue(next, i, j, GetValue(next, i, j) + DROP_HEIGHT);
     }
+}
+
+void mini::gk2::WaterSurfaceSimulation::PostUpdate()
+{
+    UpdateNormalMap();
 }
 
 void mini::gk2::WaterSurfaceSimulation::InitNormalMap()

@@ -1,4 +1,5 @@
 #pragma once
+#include "duckSimulation.h"
 #include "dxApplication.h"
 #include "mesh.h"
 #include "shaderPass.h"
@@ -119,6 +120,7 @@ class DuckDemo : public DxApplication
 #pragma endregion
 
     WaterSurfaceSimulation m_waterSimulation;
+    DuckSimulation m_duckSimulation;
 };
 
 } // namespace mini::gk2

@@ -23,7 +23,8 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
       m_cbViewMtx(m_device->CreateConstantBuffer<XMFLOAT4X4, 2>()), //
       m_cbSurfaceColor(m_device->CreateConstantBuffer<XMFLOAT4>()), //
       m_cbLightPos(m_device->CreateConstantBuffer<XMFLOAT4, 2>()),  //
-      m_orbitCamera(XMFLOAT3(0, 0, 0))
+      m_orbitCamera(XMFLOAT3(0, 0, 0)),
+      m_duckSimulation({-ROOM_SIZE / 2.f, -ROOM_SIZE / 2.f}, {ROOM_SIZE / 2.f, ROOM_SIZE / 2.f})
 {
 
     // Projection matrix
@@ -190,14 +191,22 @@ void DuckDemo::HandleControls(double dt)
 void DuckDemo::Update(const Clock& c)
 {
     double dt = c.getFrameTime();
-    m_waterSimulation.Update(dt);
+    if (m_waterSimulation.Update(dt))
+    {
+        m_waterSimulation.MapToSurfaceTexture(*m_device, m_waterSurfaceTexture);
+    }
+    if (m_duckSimulation.Update(dt))
+    {
+        auto f = m_duckSimulation.GetCurrentFrame();
+        DirectX::XMStoreFloat4x4(&m_duckMtx, XMMatrixTranslation(f.pos.x, 0.f, f.pos.y) *
+                                                 XMMatrixScaling(1.f / DUCK_SCALE, 1.f / DUCK_SCALE, 1.f / DUCK_SCALE));
+    }
+
     HandleCameraInput(dt);
     HandleControls(dt);
     if (m_isAnimated)
     {
     }
-
-    m_waterSimulation.MapToSurfaceTexture(*m_device, m_waterSurfaceTexture);
 }
 void DuckDemo::SetWorldMtx(DirectX::XMFLOAT4X4 mtx)
 {
