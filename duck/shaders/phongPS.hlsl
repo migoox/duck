@@ -16,7 +16,7 @@ struct PSInput
     float3 viewVec : TEXCOORD1;
 };
 
-static const float3 ambientColor = float3(0.2f, 0.2f, 0.2f);
+static const float3 ambientColor = float3(0.4f, 0.4f, 0.4f);
 static const float3 lightColor = float3(1.0f, 1.0f, 1.0f);
 static const float kd = 0.8, ks = 0.2f, m = 20.0f;
 
@@ -31,18 +31,21 @@ float4 main(PSInput i) : SV_TARGET
     {
         float3 lightPosition = lightPos[k].xyz;
         float3 lightVec = normalize(lightPosition - i.worldPos);
-        float3 halfVec = normalize(viewVec + lightVec);
-        color += lightColor * surfaceColor.rgb * kd * saturate(dot(normal, lightVec)); //diffuse color
-        // anisotropic specular 
-        float3 t = normalize(i.tangent);
+
+        // anisotropic specular and diffuse
         // http://www.bluevoid.com/opengl/sig00/advanced00/notes/node159.html
+
+        float3 t = normalize(i.tangent);
         float lt = dot(lightVec, t);
         float vt = dot(viewVec, t);
-        float vr = saturate(sqrt(1.0 - lt * lt) * sqrt(1.0 - vt * vt) - lt * vt);
+        float nl = sqrt(1.0 - lt * lt);
+        float vr = saturate(nl * sqrt(1.0 - vt * vt) - lt * vt);
         vr = ks * pow(vr, m);
-        color += lightColor * vr;
 
-        
+        // measure the light exposition
+        float ndotl = saturate(dot(normal, lightVec));
+        color += lightColor * surfaceColor.rgb * kd * saturate(nl) * ndotl; // diffues
+        color += lightColor * vr * ndotl; // specular
     }
     return float4(saturate(color), surfaceColor.a);
 }
