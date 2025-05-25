@@ -210,6 +210,9 @@ void DuckDemo::Update(const Clock& c)
                      ) *
             XMMatrixTranslation(XMVectorGetX(f.pos), WATER_LEVEL + DUCK_HEIGHT, XMVectorGetZ(f.pos));
         DirectX::XMStoreFloat4x4(&m_duckMtx, transformation);
+
+        m_waterSimulation.DropAt((XMVectorGetX(f.pos) + ROOM_SIZE / 2.f) / ROOM_SIZE,
+                                 (XMVectorGetZ(f.pos) + ROOM_SIZE / 2.f) / ROOM_SIZE, 0.8f);
     }
 
     HandleCameraInput(dt);

@@ -7,7 +7,7 @@
 
 mini::gk2::WaterSurfaceSimulation::WaterSurfaceSimulation()
     : Simulation(), m_currentHeightBuffer(0), m_samplesCount(SAMPLES_DEFAULT_SIZE), m_velocity(DEFAULT_VELOCITY),
-      m_randGenerator(std::random_device{}()), m_uniformDist(0, SAMPLES_DEFAULT_SIZE - 1)
+      m_randGenerator(std::random_device{}()), m_uniformDist(0, SAMPLES_DEFAULT_SIZE - 1), m_generateRandomDrops(false)
 {
     SetStepTime(1.f / static_cast<float>(SAMPLES_DEFAULT_SIZE));
     SetSimSpeed(ANIMATION_SPEED);
@@ -42,6 +42,17 @@ void mini::gk2::WaterSurfaceSimulation::MapToSurfaceTexture(DxDevice& device, dx
     }
 }
 
+void mini::gk2::WaterSurfaceSimulation::DropAt(float normalizedX, float normalizedY, float chance)
+{
+    if (m_uniformDist(m_randGenerator) > m_samplesCount - static_cast<int>(static_cast<float>(m_samplesCount) * chance))
+    {
+        auto i     = static_cast<int>(normalizedY * static_cast<float>(m_samplesCount));
+        auto j     = static_cast<int>(normalizedX * static_cast<float>(m_samplesCount));
+        auto& next = GetNextHeightBuffer();
+        SetValue(next, i, j, GetValue(next, i, j) + DROP_HEIGHT);
+    }
+}
+
 void mini::gk2::WaterSurfaceSimulation::Step()
 {
     PROFILE_ZONE("WaterSurfaceSimulation::Step");
@@ -67,6 +78,11 @@ void mini::gk2::WaterSurfaceSimulation::Step()
     }
 
     SwapHeightBuffers();
+
+    if (!m_generateRandomDrops)
+    {
+        return;
+    }
 
     // Add new drops
     if (m_uniformDist(m_randGenerator) >

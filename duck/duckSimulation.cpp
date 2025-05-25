@@ -19,6 +19,7 @@ const mini::gk2::DuckSimulation::Frame& mini::gk2::DuckSimulation::GetCurrentFra
 
 void mini::gk2::DuckSimulation::Step()
 {
+    PROFILE_ZONE("DuckSimulation::Step");
     using namespace DirectX;
 
     const auto p0 = XMLoadFloat2(&m_points[0]);
@@ -63,6 +64,7 @@ void mini::gk2::DuckSimulation::PostUpdate()
 
 void mini::gk2::DuckSimulation::UpdateDeBoorPoints()
 {
+    PROFILE_ZONE("DuckSimulation::UpdateDeBoorPoints");
     if (m_tParam < 1.f)
     {
         return;

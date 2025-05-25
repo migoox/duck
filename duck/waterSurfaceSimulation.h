@@ -19,6 +19,13 @@ class WaterSurfaceSimulation final : public Simulation
 
     void MapToSurfaceTexture(::mini::DxDevice& device, dx_ptr<ID3D11Texture2D>& texture);
 
+    void GeneretateRandomDrops(bool flag)
+    {
+        m_generateRandomDrops = flag;
+    }
+
+    void DropAt(float normalizedX, float normalizedY, float chance = 1.f);
+
   protected:
     void Step() final;
     void PostUpdate() final;
@@ -60,6 +67,8 @@ class WaterSurfaceSimulation final : public Simulation
     int m_currentHeightBuffer;
     int m_samplesCount;
     float m_velocity;
+
+    bool m_generateRandomDrops;
 
     std::mt19937 m_randGenerator;
     std::uniform_int_distribution<int> m_uniformDist;
