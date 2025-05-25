@@ -46,6 +46,7 @@ class DuckDemo : public DxApplication
 
     void DrawRoomWalls();
     void DrawWater();
+    void DrawWaterStencil();
     void DrawScene();
     void DrawDuck();
 
@@ -88,6 +89,8 @@ class DuckDemo : public DxApplication
     dx_ptr<ID3D11SamplerState> m_samplerWrap;
     dx_ptr<ID3D11SamplerState> m_samplerNormalMap;
     dx_ptr<ID3D11BlendState> m_bsAlpha;
+    dx_ptr<ID3D11BlendState> m_bsNoColorWrite;
+    dx_ptr<ID3D11DepthStencilState> m_dssNoDepthWrite;
 
     dx_ptr<ID3D11InputLayout> m_phongInputLayout;
     dx_ptr<ID3D11InputLayout> m_envInputLayout;
@@ -110,6 +113,7 @@ class DuckDemo : public DxApplication
     dx_ptr<ID3D11PixelShader> m_envPS;
     dx_ptr<ID3D11VertexShader> m_waterVS;
     dx_ptr<ID3D11PixelShader> m_waterPS;
+    dx_ptr<ID3D11PixelShader> m_waterStencilPS;
 #pragma endregion
 
 #pragma region CAMERA

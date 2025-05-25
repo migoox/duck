@@ -84,6 +84,9 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     m_waterPS          = m_device->CreatePixelShader(psCode);
     m_waterInputLayout = m_device->CreateInputLayout(VertexPosition::Layout, vsCode);
 
+    psCode           = m_device->LoadByteCode(shadersDir / L"waterStencilPS.cso");
+    m_waterStencilPS = m_device->CreatePixelShader(psCode);
+
     m_device->context()->IASetInputLayout(m_phongInputLayout.get());
     m_device->context()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -127,6 +130,12 @@ void mini::gk2::DuckDemo::CreateRenderStates()
 {
     m_bsAlpha = m_device->CreateBlendState(BlendDescription::AlphaBlendDescription());
 
+    // Setup a blend state that disables color writes
+    BlendDescription bsDesc;
+    bsDesc.RenderTarget[0].RenderTargetWriteMask = 0;
+
+    m_bsNoColorWrite = m_device->CreateBlendState(bsDesc);
+
     // Setup wrap sampler
     SamplerDescription sd;
     sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -164,6 +173,15 @@ void mini::gk2::DuckDemo::CreateRenderStates()
     rsDesc.FrontCounterClockwise = true;
     rsDesc.CullMode              = D3D11_CULL_NONE;
     m_rsCullNone                 = m_device->CreateRasterizerState(rsDesc);
+
+    DepthStencilDescription dsDesc;
+    dsDesc.DepthEnable    = TRUE;
+    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    dsDesc.DepthFunc      = D3D11_COMPARISON_LESS;
+
+    dsDesc.StencilEnable = FALSE; // Disable stencil by default
+
+    m_dssNoDepthWrite = m_device->CreateDepthStencilState(dsDesc);
 }
 
 void DuckDemo::UpdateCameraCB(XMMATRIX viewMtx)
@@ -285,13 +303,36 @@ void DuckDemo::DrawRoomWalls()
 
 void mini::gk2::DuckDemo::DrawWater()
 {
+    ID3D11DepthStencilState* dsPrev;
     ID3D11RasterizerState* rsPrev;
     m_device->context()->RSGetState(&rsPrev);
     m_device->context()->RSSetState(m_rsCullNone.get());
 
-    SetSurfaceColor(ROOM_WALLS_COLOR);
+    m_device->context()->OMGetDepthStencilState(&dsPrev, 0);
+    m_device->context()->OMSetDepthStencilState(m_dssNoDepthWrite.get(), 0);
+
     DrawMesh(m_waterPlane, m_waterPlaneMtx);
 
+    m_device->context()->RSSetState(rsPrev);
+    m_device->context()->OMSetDepthStencilState(dsPrev, 0);
+}
+
+void mini::gk2::DuckDemo::DrawWaterStencil()
+{
+    ID3D11BlendState* bsPrev;
+    float prevBlendFactor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    UINT prevSampleMask      = 0;
+    m_device->context()->OMGetBlendState(&bsPrev, prevBlendFactor, &prevSampleMask);
+    m_device->context()->OMSetBlendState(m_bsNoColorWrite.get(), prevBlendFactor, prevSampleMask);
+
+    ID3D11RasterizerState* rsPrev;
+    m_device->context()->RSGetState(&rsPrev);
+    m_device->context()->RSSetState(m_rsCullNone.get());
+
+    DrawMesh(m_waterPlane, m_waterPlaneMtx);
+
+    // Restore
+    m_device->context()->OMSetBlendState(bsPrev, prevBlendFactor, prevSampleMask);
     m_device->context()->RSSetState(rsPrev);
 }
 
@@ -310,6 +351,10 @@ void DuckDemo::DrawScene()
     SetTextures({m_envTextureView.get(), m_waterSurfaceTextureView.get()},
                 {m_samplerWrap.get(), m_samplerNormalMap.get()});
     DrawWater();
+
+    SetShaders(m_waterVS, m_waterStencilPS, m_waterInputLayout);
+    SetTextures({m_waterSurfaceTextureView.get()}, {m_samplerNormalMap.get()});
+    DrawWaterStencil();
 
     SetShaders(m_phongVS, m_phongPS, m_phongInputLayout);
     SetTextures({m_duckTextureView.get()}, {m_samplerWrap.get()});

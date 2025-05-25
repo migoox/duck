@@ -54,50 +54,28 @@ float3 intersectRay(float3 origin, float3 dir)
 float4 main(PSInput i) : SV_TARGET
 {
     float2 tex = 0.5 * (i.inCubePos.xz + float2(1.0, 1.0));
-    float3 norm = surfaceNormalMap.Sample(normalMapSamp, tex);
-    norm = norm * 2.0 - 1.0;
+    float3 norm = surfaceNormalMap.Sample(normalMapSamp, tex) * 2.0 - 1.0;
 
     float3 camPos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
     float3 viewVec = normalize(camPos - i.worldPos);
-    if (dot(viewVec, norm) > 0.0)
-    {
-        float f = frenelCoeff(norm, viewVec, s_n1, s_n2);
+    float f = frenelCoeff(norm, viewVec, s_n1, s_n2);
 
-        float eta = s_n1 / s_n2;
+    bool flipNormal = dot(viewVec, norm) > 0.0;
+    float eta = flipNormal ? (s_n1 / s_n2) : (s_n2 / s_n1);
+    if (flipNormal)
         norm = -norm;
 
-        float3 refr = refract(viewVec, norm, eta);
-        float3 refrHit = intersectRay(i.inCubePos, refr);
-        float4 color_refr = envMap.Sample(samp, refrHit);
+    float3 refr = refract(viewVec, norm, eta);
+    float3 refl = reflect(viewVec, norm);
+    float3 reflHit = intersectRay(i.inCubePos, refl);
+    float4 color_refl = envMap.Sample(samp, reflHit);
 
-        float3 refl = reflect(viewVec, norm);
-        float3 reflHit = intersectRay(i.inCubePos, refl);
-        float4 color_refl = envMap.Sample(samp, reflHit);
+    if (!any(refr))
+        return gamma_correction(color_refl);
 
-        float4 final_color = f * color_refl + (1.0 - f) * color_refr;
-        return gamma_correction(final_color);
-    }
-    else
-    {
-        float f = frenelCoeff(norm, viewVec, s_n1, s_n2);
+    float3 refrHit = intersectRay(i.inCubePos, refr);
+    float4 color_refr = envMap.Sample(samp, refrHit);
 
-        float eta = s_n2 / s_n1;
-
-        float3 refr = refract(viewVec, norm, eta);
-        
-        float3 refl = reflect(viewVec, norm);
-        float3 reflHit = intersectRay(i.inCubePos, refl);
-        float4 color_refl = envMap.Sample(samp, reflHit);
-
-        if (!any(refr))
-        {
-            return gamma_correction(color_refl);
-        }
-
-        float3 refrHit = intersectRay(i.inCubePos, refr);
-        float4 color_refr = envMap.Sample(samp, refrHit);
-
-        float4 final_color = f * color_refl + (1.0 - f) * color_refr;
-        return gamma_correction(final_color);
-    }
+    float4 final_color = f * color_refl + (1.0 - f) * color_refr;
+    return gamma_correction(final_color);
 }
