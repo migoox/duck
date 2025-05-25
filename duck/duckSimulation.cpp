@@ -6,12 +6,13 @@
 #include <ranges>
 
 mini::gk2::DuckSimulation::DuckSimulation(DirectX::XMFLOAT2 min, DirectX::XMFLOAT2 max)
-    : m_uniformDistX(200 * min.x, 200 * max.x), m_uniformDistY(200 * min.y, 200 * max.y)
+    : m_uniformDistX(min.x, max.x), m_uniformDistY(min.y, max.y)
 {
     InitDeBoorPoints();
+    m_frame.normal = DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f);
 }
 
-mini::gk2::DuckSimulation::Frame mini::gk2::DuckSimulation::GetCurrentFrame()
+const mini::gk2::DuckSimulation::Frame& mini::gk2::DuckSimulation::GetCurrentFrame()
 {
     return m_frame;
 }
@@ -20,25 +21,37 @@ void mini::gk2::DuckSimulation::Step()
 {
     using namespace DirectX;
 
-    auto p0 = XMLoadFloat2(&m_points[0]);
-    auto p1 = XMLoadFloat2(&m_points[1]);
-    auto p2 = XMLoadFloat2(&m_points[2]);
-    auto p3 = XMLoadFloat2(&m_points[3]);
+    const auto p0 = XMLoadFloat2(&m_points[0]);
+    const auto p1 = XMLoadFloat2(&m_points[1]);
+    const auto p2 = XMLoadFloat2(&m_points[2]);
+    const auto p3 = XMLoadFloat2(&m_points[3]);
 
     // Convert to bezier (uniform knots)
-    auto bp0 = (p0 + 4.0f * p1 + p2) / 6.0f;
-    auto bp1 = (4.0f * p1 + 2.0f * p2) / 6.0f;
-    auto bp2 = (2.0f * p1 + 4.0f * p2) / 6.0f;
-    auto bp3 = (p1 + 4.0f * p2 + p3) / 6.0f;
+    const auto bp0 = (p0 + 4.f * p1 + p2) / 6.f;
+    const auto bp1 = (4.f * p1 + 2.f * p2) / 6.f;
+    const auto bp2 = (2.f * p1 + 4.f * p2) / 6.f;
+    const auto bp3 = (p1 + 4.f * p2 + p3) / 6.f;
 
-    // Evaulate the bezier
-    auto t  = m_tParam;
-    auto u  = (1.0 - t);
-    auto b3 = t * t * t;
-    auto b2 = 3.0 * t * t * u;
-    auto b1 = 3.0 * t * u * u;
-    auto b0 = u * u * u;
-    XMStoreFloat2(&m_frame.pos, bp0 * b0 + bp1 * b1 + bp2 * b2 + bp3 * b3);
+    const auto t = static_cast<float>(m_tParam);
+    const auto u = (1.f - t);
+
+    // Evaulate bezier
+    const auto b3 = t * t * t;
+    const auto b2 = 3.f * t * t * u;
+    const auto b1 = 3.f * t * u * u;
+    const auto b0 = u * u * u;
+
+    const auto pos = bp0 * b0 + bp1 * b1 + bp2 * b2 + bp3 * b3;
+    m_frame.pos    = XMVectorSet(XMVectorGetX(pos), 0.f, XMVectorGetY(pos), 1.f);
+
+    // Find derivative (https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Cubic_B%C3%A9zier_curves)
+    const auto c23 = 3.f * t * t;
+    const auto c12 = 6.f * u * t;
+    const auto c01 = 3.f * u * u;
+
+    const auto v      = c01 * (bp1 - bp0) + c12 * (bp2 - bp1) + c23 * (bp3 - bp2);
+    m_frame.tangent   = XMVector3Normalize(XMVectorSet(XMVectorGetX(v), 0.f, XMVectorGetY(v), 0.f));
+    m_frame.bitangent = XMVector3Normalize(XMVector3Cross(m_frame.normal, m_frame.tangent));
 
     m_tParam += ANIMATION_SPEED * StepTime();
 }
@@ -62,7 +75,7 @@ void mini::gk2::DuckSimulation::UpdateDeBoorPoints()
 }
 void mini::gk2::DuckSimulation::InitDeBoorPoints()
 {
-    for (auto i = 0; i < 5; i++)
+    for (auto i = 0; i < MAX_POINTS; i++)
     {
         m_points[i].x = m_uniformDistX(m_randGenerator);
         m_points[i].y = m_uniformDistY(m_randGenerator);

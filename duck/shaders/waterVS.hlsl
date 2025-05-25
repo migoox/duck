@@ -21,7 +21,7 @@ struct VSOutput
     float3 worldPos : POSITION1;
 };
 
-static float WaterLevel = -0.2;
+static float WaterLevel = -2.0 / 10.0;
 
 VSOutput main(float3 pos : POSITION0)
 {

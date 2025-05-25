@@ -9,10 +9,10 @@ class DuckSimulation final : public Simulation
   public:
     struct Frame
     {
-        DirectX::XMFLOAT2 pos;
-        DirectX::XMFLOAT2 bitangent;
-        DirectX::XMFLOAT2 tangent;
-        DirectX::XMFLOAT2 normal;
+        DirectX::XMVECTOR pos;
+        DirectX::XMVECTOR bitangent;
+        DirectX::XMVECTOR tangent;
+        DirectX::XMVECTOR normal;
     };
 
     DuckSimulation() = delete;
@@ -20,9 +20,9 @@ class DuckSimulation final : public Simulation
     DuckSimulation(DirectX::XMFLOAT2 min, DirectX::XMFLOAT2 max);
     ~DuckSimulation() final = default;
 
-    Frame GetCurrentFrame();
+    const Frame& GetCurrentFrame();
 
-    static constexpr float ANIMATION_SPEED = 0.2f;
+    static constexpr double ANIMATION_SPEED = 0.2;
 
   private:
     void Step() final;
@@ -32,9 +32,9 @@ class DuckSimulation final : public Simulation
     void UpdateDeBoorPoints();
 
   private:
-    static constexpr size_t MAX_POINTS = 5;
+    static constexpr size_t MAX_POINTS = 4;
     std::array<DirectX::XMFLOAT2, MAX_POINTS> m_points;
-    float m_tParam;
+    double m_tParam;
 
     std::mt19937 m_randGenerator;
     std::uniform_real_distribution<float> m_uniformDistX;

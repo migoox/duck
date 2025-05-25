@@ -23,8 +23,8 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
       m_cbViewMtx(m_device->CreateConstantBuffer<XMFLOAT4X4, 2>()), //
       m_cbSurfaceColor(m_device->CreateConstantBuffer<XMFLOAT4>()), //
       m_cbLightPos(m_device->CreateConstantBuffer<XMFLOAT4, 2>()),  //
-      m_orbitCamera(XMFLOAT3(0, 0, 0)),
-      m_duckSimulation({-ROOM_SIZE / 2.f, -ROOM_SIZE / 2.f}, {ROOM_SIZE / 2.f, ROOM_SIZE / 2.f})
+      m_orbitCamera(XMFLOAT3(0, 0, 0.f)),
+      m_duckSimulation({-ROOM_SIZE / 3.f, -ROOM_SIZE / 3.f}, {ROOM_SIZE / 3.f, ROOM_SIZE / 3.f})
 {
 
     // Projection matrix
@@ -34,7 +34,6 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     UpdateBuffer(m_cbProjMtx, m_projMtx);
     UpdateCameraCB();
 
-    // Set the camera starting position
     m_orbitCamera.Zoom(5.f);
 
     // Meshes
@@ -44,7 +43,12 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     auto meshesDir = Path::MeshesDir();
     m_duck         = Mesh::LoadMesh(*m_device, meshesDir / "duck" / "duck.txt");
-    DirectX::XMStoreFloat4x4(&m_duckMtx, XMMatrixScaling(1.f / DUCK_SCALE, 1.f / DUCK_SCALE, 1.f / DUCK_SCALE));
+    // XMMATRIX(XMVectorSet(1, 0, 0, 0),                         //
+    //                                             XMVectorSet(0, 1, 0, 0),                         //
+    //                                             XMVectorSet(0, 0, 1, 0), XMVectorSet(0, 0, 0, 1) //
+    //                                             )
+    DirectX::XMStoreFloat4x4(&m_duckMtx, XMMatrixScaling(DUCK_SCALE, DUCK_SCALE, DUCK_SCALE) *
+                                             XMMatrixRotationY(XMConvertToRadians(90.f)));
 
     // Constant buffers content
     UpdateBuffer(m_cbLightPos, LIGHT_POS);
@@ -197,9 +201,15 @@ void DuckDemo::Update(const Clock& c)
     }
     if (m_duckSimulation.Update(dt))
     {
-        auto f = m_duckSimulation.GetCurrentFrame();
-        DirectX::XMStoreFloat4x4(&m_duckMtx, XMMatrixTranslation(f.pos.x, 0.f, f.pos.y) *
-                                                 XMMatrixScaling(1.f / DUCK_SCALE, 1.f / DUCK_SCALE, 1.f / DUCK_SCALE));
+        const auto& f = m_duckSimulation.GetCurrentFrame();
+        XMMATRIX transformation =
+            XMMatrixScaling(DUCK_SCALE, DUCK_SCALE, DUCK_SCALE) *
+            XMMATRIX(-f.tangent,             //
+                     f.normal, f.bitangent,  //
+                     XMVectorSet(0, 0, 0, 1) //
+                     ) *
+            XMMatrixTranslation(XMVectorGetX(f.pos), WATER_LEVEL + DUCK_HEIGHT, XMVectorGetZ(f.pos));
+        DirectX::XMStoreFloat4x4(&m_duckMtx, transformation);
     }
 
     HandleCameraInput(dt);
