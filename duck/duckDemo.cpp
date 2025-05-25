@@ -11,7 +11,7 @@ using namespace gk2;
 using namespace DirectX;
 using namespace std;
 
-const XMFLOAT4 DuckDemo::LIGHT_POS[2]     = {{0.0f, 4.f, 0.0f, 1.0f}, {3.f, 4.f, 0.0f, 1.0f}};
+const XMFLOAT4 DuckDemo::LIGHT_POS[2]     = {{0.0f, 4.f, -5.0f, 1.0f}, {3.f, 4.f, 0.0f, 1.0f}};
 const XMFLOAT4 DuckDemo::ROOM_WALLS_COLOR = {0.8f, 0.8f, 0.4f, 1.f};
 
 DuckDemo::DuckDemo(HINSTANCE appInstance)

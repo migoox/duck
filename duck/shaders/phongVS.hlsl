@@ -26,18 +26,28 @@ struct PSInput
     float4 pos : SV_POSITION;
     float3 worldPos : POSITION0;
     float3 norm : NORMAL0;
+    float3 tangent : NORMAL1;
     float2 tex : TEXCOORD0;
     float3 viewVec : TEXCOORD1;
 };
 
 PSInput main(VSInput i)
 {
+    const float3 anisotropyDir = float3(0.2, 0.0, 0.5);
+
     PSInput o;
     o.worldPos = mul(worldMatrix, float4(i.pos, 1.0f)).xyz;
     o.pos = mul(viewMatrix, float4(o.worldPos, 1.0f));
     o.pos = mul(projMatrix, o.pos);
+
     o.norm = mul(worldMatrix, float4(i.norm, 0.0f)).xyz;
     o.norm = normalize(o.norm);
+
+    float3 locNorm = normalize(i.norm);
+    o.tangent = normalize(anisotropyDir - locNorm * dot(anisotropyDir, locNorm));
+    o.tangent = mul(worldMatrix, float4(o.tangent, 0.0f)).xyz;
+    o.tangent = normalize(o.tangent);
+
     float3 camPos = mul(invViewMatrix, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
     o.viewVec = camPos - o.worldPos;
     o.tex = i.tex;
