@@ -121,16 +121,20 @@ void mini::gk2::WaterSurfaceSimulation::UpdateNormalMap()
     PROFILE_ZONE("WaterSurfaceSimulation::UpdateNormalMap")
     auto& curr = GetCurrentHeightBuffer();
     // Blinn method (https://en.wikipedia.org/wiki/Bump_mapping#Methods)
-    for (auto i = 1; i < m_samplesCount - 1; i++)
+    for (auto i = 0; i < m_samplesCount; i++)
     {
-        for (auto j = 1; j < m_samplesCount - 1; j++)
+        for (auto j = 0; j < m_samplesCount; j++)
         {
-
             // 1. Gradient approx with finite difference (https://en.wikipedia.org/wiki/Finite_difference) for each
-            // partial derivative
-            auto dx = curr[m_samplesCount * i + (j - 1)] - curr[m_samplesCount * i + (j + 1)];
-            auto dy = 1.f;
-            auto dz = curr[m_samplesCount * (i - 1) + j] - curr[m_samplesCount * (i + 1) + j];
+            // partial derivative with edge smoothing (assuming 0.f when out of bounds)
+            float left  = (j > 0) ? curr[m_samplesCount * i + (j - 1)] : 0.0f;
+            float right = (j < m_samplesCount - 1) ? curr[m_samplesCount * i + (j + 1)] : 0.0f;
+            float up    = (i > 0) ? curr[m_samplesCount * (i - 1) + j] : 0.0f;
+            float down  = (i < m_samplesCount - 1) ? curr[m_samplesCount * (i + 1) + j] : 0.0f;
+
+            float dx = left - right;
+            float dy = 1.0f; // constant if surface is y = f(x,z)
+            float dz = up - down;
 
             // 2. Normalize
             const auto denom = std::sqrt(dx * dx + dy * dy + dz * dz);

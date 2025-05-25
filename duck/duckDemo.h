@@ -59,8 +59,8 @@ class DuckDemo : public DxApplication
     static constexpr float ROTATION_SPEED = 7.f;
     static constexpr float ZOOM_SPEED     = 5.f;
     static constexpr float DUCK_SCALE     = 1.f / 200.f;
-    static constexpr float WATER_LEVEL    = -2.f; // REMEMBER TO MODIFY waterVS
-    static constexpr float DUCK_HEIGHT    = 0.94f;
+    static constexpr float WATER_LEVEL    = -2.6f; // REMEMBER TO MODIFY waterVS
+    static constexpr float DUCK_HEIGHT    = 1.24f;
 
 #pragma endregion
 

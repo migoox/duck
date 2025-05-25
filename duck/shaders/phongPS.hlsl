@@ -33,7 +33,6 @@ float4 main(PSInput i) : SV_TARGET
         float3 lightVec = normalize(lightPosition - i.worldPos);
         float3 halfVec = normalize(viewVec + lightVec);
         color += lightColor * surfaceColor.rgb * kd * saturate(dot(normal, lightVec)); //diffuse color
-
         // anisotropic specular 
         float3 t = normalize(i.tangent);
         // http://www.bluevoid.com/opengl/sig00/advanced00/notes/node159.html
@@ -42,6 +41,8 @@ float4 main(PSInput i) : SV_TARGET
         float vr = saturate(sqrt(1.0 - lt * lt) * sqrt(1.0 - vt * vt) - lt * vt);
         vr = ks * pow(vr, m);
         color += lightColor * vr;
+
+        
     }
     return float4(saturate(color), surfaceColor.a);
 }

@@ -11,7 +11,7 @@ using namespace gk2;
 using namespace DirectX;
 using namespace std;
 
-const XMFLOAT4 DuckDemo::LIGHT_POS[2]     = {{0.0f, 4.f, -5.0f, 1.0f}, {3.f, 4.f, 0.0f, 1.0f}};
+const XMFLOAT4 DuckDemo::LIGHT_POS[2]     = {{0.0f, 4.f, 2.0f, 1.0f}, {3.f, 4.f, 0.0f, 1.0f}};
 const XMFLOAT4 DuckDemo::ROOM_WALLS_COLOR = {0.8f, 0.8f, 0.4f, 1.f};
 
 DuckDemo::DuckDemo(HINSTANCE appInstance)
@@ -43,10 +43,6 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     auto meshesDir = Path::MeshesDir();
     m_duck         = Mesh::LoadMesh(*m_device, meshesDir / "duck" / "duck.txt");
-    // XMMATRIX(XMVectorSet(1, 0, 0, 0),                         //
-    //                                             XMVectorSet(0, 1, 0, 0),                         //
-    //                                             XMVectorSet(0, 0, 1, 0), XMVectorSet(0, 0, 0, 1) //
-    //                                             )
     DirectX::XMStoreFloat4x4(&m_duckMtx, XMMatrixScaling(DUCK_SCALE, DUCK_SCALE, DUCK_SCALE) *
                                              XMMatrixRotationY(XMConvertToRadians(90.f)));
 
@@ -58,7 +54,7 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
 
     // Textures
     auto texturesDir  = Path::TexturesDir();
-    m_envTextureView  = m_device->CreateShaderResourceView(texturesDir / "cubeMap.dds");
+    m_envTextureView  = m_device->CreateShaderResourceView(texturesDir / "output_skybox.dds");
     m_duckTextureView = m_device->CreateShaderResourceView(texturesDir / "ducktex.jpg");
     CreateWaterSurfaceTexture();
 
