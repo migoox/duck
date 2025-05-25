@@ -10,15 +10,15 @@ struct PSInput
 {
     float4 pos : SV_POSITION;
     float3 worldPos : POSITION0;
-    float3 norm : NORMAL0;
-    float3 tangent : NORMAL1;
+    float3 tangent : NORMAL0;
+    float3 norm : NORMAL1;
     float2 tex : TEXCOORD0;
     float3 viewVec : TEXCOORD1;
 };
 
 static const float3 ambientColor = float3(0.2f, 0.2f, 0.2f);
 static const float3 lightColor = float3(1.0f, 1.0f, 1.0f);
-static const float kd = 0.5, ks = 0.2f, m = 100.0f;
+static const float kd = 0.8, ks = 0.2f, m = 20.0f;
 
 float4 main(PSInput i) : SV_TARGET
 {
@@ -34,45 +34,14 @@ float4 main(PSInput i) : SV_TARGET
         float3 halfVec = normalize(viewVec + lightVec);
         color += lightColor * surfaceColor.rgb * kd * saturate(dot(normal, lightVec)); //diffuse color
 
-        if (any(i.tangent))
-        {
-            // anisotropic lighting
-            //float alpha_x = 0.9;
-            //float alpha_y = 0.3;
-            //float alpha_x_squared = alpha_x * alpha_x;
-            //float alpha_y_squared = alpha_y * alpha_y;
-
-            //float3 tangent = normalize(i.anisotropyDir);
-            //float3 bitangent = normalize(cross(normal, tangent)); // Make sure it's orthogonal
-            //float3 h = normalize(viewVec + lightVec); // Half vector
-
-            //float3 h_tangentSpace = float3(dot(h, tangent), dot(h, bitangent), dot(h, normal));
-            //float nh = h_tangentSpace.z;
-
-            //float exponent = (pow(h_tangentSpace.x, 2) / alpha_x_squared) +
-            //     (pow(h_tangentSpace.y, 2) / alpha_y_squared);
-
-            //float spec = exp(-exponent / (nh * nh + 1e-5));
-            //spec *= ks * saturate(dot(normal, lightVec));
-            //color += lightColor * spec;
-            float nh = dot(i.tangent, halfVec);
-            nh *= nh;
-            nh = sqrt(1.0 - nh);
-            nh = saturate(nh);
-            nh = pow(nh, m);
-            nh *= ks;
-            color += lightColor * nh;
-        }
-        else
-        {
-            // isotropic lighting
-            float nh = dot(normal, halfVec);
-            nh = saturate(nh);
-            nh = pow(nh, m);
-            nh *= ks;
-            color += lightColor * nh;
-        }
-        
+        // anisotropic specular 
+        float3 t = normalize(i.tangent);
+        // http://www.bluevoid.com/opengl/sig00/advanced00/notes/node159.html
+        float lt = dot(lightVec, t);
+        float vt = dot(viewVec, t);
+        float vr = saturate(sqrt(1.0 - lt * lt) * sqrt(1.0 - vt * vt) - lt * vt);
+        vr = ks * pow(vr, m);
+        color += lightColor * vr;
     }
     return float4(saturate(color), surfaceColor.a);
 }

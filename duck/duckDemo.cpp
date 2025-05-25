@@ -69,7 +69,7 @@ DuckDemo::DuckDemo(HINSTANCE appInstance)
     auto psCode        = m_device->LoadByteCode(shadersDir / L"phongPS.cso");
     m_phongVS          = m_device->CreateVertexShader(vsCode);
     m_phongPS          = m_device->CreatePixelShader(psCode);
-    m_phongInputLayout = m_device->CreateInputLayout(VertexPositionNormalTexCoords::Layout, vsCode);
+    m_phongInputLayout = m_device->CreateInputLayout(VertexFrameTexCoords::Layout, vsCode);
 
     vsCode       = m_device->LoadByteCode(shadersDir / L"texturedVS.cso");
     psCode       = m_device->LoadByteCode(shadersDir / L"texturedPS.cso");

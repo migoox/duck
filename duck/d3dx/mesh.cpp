@@ -465,7 +465,7 @@ Mesh mini::Mesh::LoadMesh(const DxDevice& device, const std::filesystem::path& m
     int vn;
     input >> vn;
 
-    vector<VertexPositionNormalTexCoords> verts(vn);
+    vector<VertexFrameTexCoords> verts(vn);
     for (auto i = 0; i < vn; ++i)
     {
         input >> verts[i].position.x >> verts[i].position.y >> verts[i].position.z >> verts[i].normal.x >>
@@ -478,6 +478,62 @@ Mesh mini::Mesh::LoadMesh(const DxDevice& device, const std::filesystem::path& m
     for (auto i = 0; i < in; ++i)
     {
         input >> inds[3 * i] >> inds[3 * i + 1] >> inds[3 * i + 2];
+    }
+
+    // From: https://www.cs.upc.edu/~virtual/G/1.%20Teoria/06.%20Textures/Tangent%20Space%20Calculation.pdf
+    for (auto i = 0; i < in; ++i)
+    {
+        auto idx1 = inds[3 * i];
+        auto idx2 = inds[3 * i + 1];
+        auto idx3 = inds[3 * i + 2];
+
+        const auto& v1 = verts[idx1].position;
+        const auto& v2 = verts[idx2].position;
+        const auto& v3 = verts[idx3].position;
+
+        const auto& w1 = verts[idx1].tex;
+        const auto& w2 = verts[idx2].tex;
+        const auto& w3 = verts[idx3].tex;
+
+        const float x1 = v2.x - v1.x;
+        const float x2 = v3.x - v1.x;
+        const float y1 = v2.y - v1.y;
+        const float y2 = v3.y - v1.y;
+        const float z1 = v2.z - v1.z;
+        const float z2 = v3.z - v1.z;
+
+        const float s1 = w2.x - w1.x;
+        const float s2 = w3.x - w1.x;
+        const float t1 = w2.y - w1.y;
+        const float t2 = w3.y - w1.y;
+
+        const float r = 1.0F / (s1 * t2 - s2 * t1);
+
+        XMFLOAT3 sdir = {0.f, 0.f, 0.f};
+        sdir.x += (t2 * x1 - t1 * x2) * r;
+        sdir.y += (t2 * y1 - t1 * y2) * r;
+        sdir.z += (t2 * z1 - t1 * z2) * r;
+
+        verts[idx1].tangent.x += sdir.x;
+        verts[idx1].tangent.y += sdir.y;
+        verts[idx1].tangent.z += sdir.z;
+
+        verts[idx2].tangent.x += sdir.x;
+        verts[idx2].tangent.y += sdir.y;
+        verts[idx2].tangent.z += sdir.z;
+
+        verts[idx3].tangent.x += sdir.x;
+        verts[idx3].tangent.y += sdir.y;
+        verts[idx3].tangent.z += sdir.z;
+    }
+    for (auto i = 0; i < vn; ++i)
+    {
+        auto normal  = DirectX::XMLoadFloat3(&verts[i].normal);
+        auto tangent = DirectX::XMLoadFloat3(&verts[i].tangent);
+
+        // gram-smidt
+        tangent = DirectX::XMVector3Normalize(tangent - normal * DirectX::XMVector3Dot(normal, tangent));
+        DirectX::XMStoreFloat3(&verts[i].tangent, tangent);
     }
 
     return SimpleTriMesh(device, verts, inds);
